@@ -1,0 +1,1926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flamez AI: Battle Bot</title>
+    <style>
+
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;700&display=swap');
+        
+        :root {
+            --background-color: #111111; --surface-color: #1a1a1a;
+            --primary-color: #FF4500; --secondary-color: #ff8c00;
+            --text-primary: #ffffff; --text-secondary: #b3b3b3;
+            --user-bubble: #0096C7; --ai-bubble: #444444;
+            --fire-gradient: linear-gradient(135deg, #FFEB3B, #FFC107, #FF9800, #F44336);
+            --blue-flame-gradient: linear-gradient(135deg, #0077b6, #00b4d8, #90e0ef, #caf0f8);
+            --text-outline: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { height: 100%; overflow: hidden; }
+        body { height: 100%; background-color: var(--background-color); font-family: 'Roboto', sans-serif; overflow: hidden; max-width: 100%; }
+        
+        #startupScreen {
+            display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+            height: 100%; max-width: 450px; margin: 0 auto; text-align: center;
+            transition: opacity 0.5s ease-out; position: relative; overflow: hidden; padding-bottom: 2vh;
+        }
+        .startup-image-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: url('battle-bot-3.png') no-repeat center center;
+            background-size: cover; opacity: 0.8; z-index: 1;
+        }
+                .video-background {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            min-width: 100%; min-height: 100%; width: auto; height: auto; z-index: 0; 
+            opacity: 0.35;
+            transition: opacity 1s ease-in-out; /* This creates the smooth fade */
+        }
+        .hidden-video {
+            opacity: 0 !important; /* Use important to ensure it stays hidden */
+            pointer-events: none; /* Prevents interaction with the hidden video */
+        }
+        .startup-logo-container, .startup-buttons { z-index: 2; }
+        
+        .startup-logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            gap: 10px;
+            position: relative; 
+            left: 40px;         
+            top: 10px;          
+        }
+        .startup-logo-image { width: 70%; max-width: 320px; }
+        .startup-buttons { display: flex; align-items: center; justify-content: center; gap: 20px; margin-top: -55px; width: 100%;}
+
+        #startButton {
+            font-family: 'Bebas Neue', cursive; font-size: 2rem; letter-spacing: 3px; color: white;
+            background: var(--fire-gradient); border: none; border-radius: 15px; padding: 15px 40px; cursor: pointer;
+            text-shadow: var(--text-outline); box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.6);
+            transition: transform 0.2s, filter 0.2s, background 0.2s; position: relative; overflow: hidden;
+        }
+        
+/* THIS IS THE NEW, CORRECTED CSS FOR THE PLAY BUTTON */
+#playMusicBtn {
+    background: transparent;
+    border: none;
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s;
+    
+    /* These two lines allow you to move the button */
+    position: relative;
+    top: 30px; /* A bigger number moves it down more */
+}
+        #playMusicBtn img { height: 100%; width: auto; filter: drop-shadow(0 0 5px var(--primary-color)); }
+        #playMusicBtn:hover { transform: scale(1.1); }
+        #playMusicBtn:active { transform: scale(0.95); }
+        
+        .cff-link {
+    display: flex; 
+    height: 60px; 
+    width: 100px; /* <-- ADDED THIS LINE. Adjust 100px to your desired width. */
+    border-radius: 10px; 
+    overflow: hidden;
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.6); 
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.cff-link:hover { transform: scale(1.1); box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.8); }
+.cff-link img { 
+    height: 100%; 
+    width: 100%; /* <-- CHANGED from 'auto' to '100%' */
+    object-fit: cover; /* <-- ADDED this to prevent stretching */
+    display: block; 
+}
+        #startButton:hover { filter: brightness(1.2); transform: scale(1.05); }
+        #startButton:active { transform: scale(0.95); filter: brightness(1); background: var(--blue-flame-gradient); }
+        #startButton::before {
+            content: ''; position: absolute; top: 50%; left: 50%; width: 100%; height: 100%; border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 255, 224, 0.8), transparent 70%);
+            transform: translate(-50%, -50%) scale(0); opacity: 0; pointer-events: none;
+        }
+        #startButton:active::before { animation: flash 0.3s ease-out; }
+
+        .app-container { 
+            display: flex; flex-direction: column; height: 100dvh; max-width: 450px;
+            margin: 0 auto; background-color: var(--surface-color); 
+            transition: opacity 0.5s ease-in; position: relative; overflow: hidden;
+        }
+        .app-container > .video-background { z-index: 0; opacity: 0.2; }
+
+.welcome-wrapper { 
+    align-self: center; 
+    justify-content: center; 
+    width: 85%; 
+}
+.ai-message.welcome-message { 
+    cursor: default; 
+    background: none; 
+    border: 1px dashed var(--text-secondary); 
+    padding: 10px; 
+    box-shadow: none; 
+    text-shadow: none; 
+    text-align: center; 
+    color: rgba(255, 255, 255, 0.7); 
+    max-width: 100%; 
+    border-radius: 25px; 
+}
+.ai-message.welcome-message::after { 
+    display: none; /* Hides the glossy overlay */
+}       
+header {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end; /* Aligns items to the bottom */
+    height: 140px;
+    padding: 0 15px;
+    background: linear-gradient(to top, #2d2d2d, #0d0d0d);
+    border-top: 3px solid var(--user-bubble);
+    position: relative;
+    z-index: 2;
+    box-shadow: 0px 4px 15px -3px var(--primary-color);
+}
+
+.header-logo-container {
+    flex-grow: 1;
+    text-align: center;
+}
+
+.header-logo {
+    height: 175px;
+    vertical-align: middle;
+    position: relative;
+    top: 25px; /* Slides the logo down */
+}
+
+.header-controls {
+    display: flex;
+    align-items: center; /* Vertically centers the content */
+    gap: 15px;
+    flex-shrink: 0;
+    padding-bottom: 10px; /* Adds space from the bottom edge of the header */
+}
+
+.icon-stack {
+    display: flex;
+    flex-direction: column; /* This is the key fix to stack icons */
+    gap: 8px; /* Space between the stacked icons */
+}
+
+       #soundToggleBtn, #musicBtn, #historyBtn, #newChatBtn, #helpBtn, #achievementsBtn { background: transparent; border: none; cursor: pointer; padding: 0; width: 44px; height: 44px; }
+        #soundToggleBtn img, #newChatBtn img, #helpBtn svg { width: 100%; height: 100%; }
+        #musicBtn img, #historyBtn img, #achievementsBtn img { width: 100%; height: 100%; border-radius: 50%;}
+        .hidden { display: none; }
+        
+        .chat-window { 
+            flex-grow: 1; 
+            padding: 20px 12px; 
+            overflow-y: auto; 
+            overflow-x: hidden; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 15px; 
+            scroll-behavior: smooth; 
+            position: relative; 
+            z-index: 1; 
+            background-color: transparent; 
+            scrollbar-width: thin; 
+            scrollbar-color: #FFC107 transparent; 
+        }
+        .chat-window::-webkit-scrollbar { width: 8px; } 
+        .chat-window::-webkit-scrollbar-track { background: transparent; } 
+        .chat-window::-webkit-scrollbar-thumb { background-color: #FFC107; border-radius: 10px; } 
+        .chat-window::-webkit-scrollbar-thumb:hover { background-color: #FFEB3B; }
+        .message-wrapper { position: relative; display: flex; align-items: flex-end; gap: 10px; max-width: 90%; opacity: 0; transform: translateY(20px); animation: fadeIn 0.5s forwards; margin-bottom: 10px; }
+        @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+        .chat-avatar { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; box-shadow: 1px 1px 5px rgba(0,0,0,0.7); }
+        .ai-wrapper { align-self: flex-start; } .user-wrapper { align-self: flex-end; flex-direction: row-reverse; }
+        .message { max-width: 100%; padding: 12px 18px; border-radius: 20px; line-height: 1.5; word-wrap: break-word; position: relative; overflow: hidden; box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.5); text-shadow: var(--text-outline); }
+        .message::after { content: ''; position: absolute; width: 150px; height: 150px; pointer-events: none; }
+        .user-message { background-color: var(--user-bubble); color: var(--text-primary); align-self: flex-end; border-bottom-right-radius: 5px; }
+        .ai-message { background-color: var(--ai-bubble); color: var(--text-primary); border-bottom-left-radius: 5px; }
+        .ai-message::after { bottom: 0; left: 0; background: radial-gradient(circle at bottom left, rgba(255, 255, 255, 0.15), transparent 70%); }
+        .user-message::after { bottom: 0; right: 0; background: radial-gradient(circle at bottom right, rgba(255, 255, 255, 0.15), transparent 70%); }
+        .welcome-wrapper { align-self: center; justify-content: center; width: 85%; }
+        .ai-message.welcome-message { cursor: default; background: none; border: 1px dashed var(--text-secondary); padding: 10px; box-shadow: none; text-shadow: none; text-align: center; color: rgba(255, 255, 255, 0.7); max-width: 100%; border-radius: 25px; }
+        .ai-message.welcome-message::after { display: none; }
+        .typing-indicator { display: none; align-self: flex-start; align-items: flex-end; gap: 10px; padding: 10px 0;}
+        .typing-indicator .chat-avatar { width: 40px; height: 40px; border-radius: 50%; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
+        .dots-container { display: flex; align-items: center; justify-content: center; background-color: var(--ai-bubble); border-radius: 20px; padding: 12px 18px; height: 1.5em;}
+        .dots-container span { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: var(--text-secondary); margin: 0 2px; animation: bounce 1.4s infinite ease-in-out both; }
+        .dots-container span:nth-child(1) { animation-delay: -0.32s; } .dots-container span:nth-child(2) { animation-delay: -0.16s; }
+        /* --- Ad-lib specific typing indicator --- */
+#adLibTypingIndicator .dots-container {
+    padding: 8px 15px; /* Make it smaller than the main one */
+    max-width: fit-content;
+    align-self: flex-start;
+}
+        .chat-form { flex-shrink: 0; display: flex; align-items: flex-end; padding: 15px; background-color: #0d0d0d; border-top: 1px solid #333; gap: 10px; position: relative; z-index: 2; }
+        
+.input-wrapper { 
+    position: relative; 
+    flex-grow: 1; 
+    border-radius: 25px; 
+    padding: 2px; 
+    overflow: hidden; 
+    background: linear-gradient(90deg, #ffffff, #90e0ef, #FFEB3B, #ff8c00, #FF4500, #ff8c00, #FFEB3B, #90e0ef, #ffffff); 
+    background-size: 400% 100%; 
+    animation: slide 8s linear infinite; 
+    display: flex; 
+    align-items: center; 
+}
+        @keyframes slide { to { background-position: -400% 0; } }
+        #userInput { 
+    width: 100%; 
+    padding: 10px 15px;
+    border-radius: 23px; 
+    border: none; 
+    background: linear-gradient(to top, #0d0d0d, #2d2d2d);  
+    color: var(--text-primary); 
+    font-size: 1rem; 
+    outline: none; 
+    position: relative; 
+    z-index: 2;
+    resize: none;
+    line-height: 1.5;
+    
+    overflow-y: hidden; /* Keeps scrolling behavior enabled */
+    max-height: 72px; /* Set max height to fit exactly two lines + padding */
+    
+    /* These two rules hide the scrollbar in different browsers */
+    scrollbar-width: none;  /* For Firefox */
+    -ms-overflow-style: none; /* For Internet Explorer and Edge */
+}
+/* This rule hides the scrollbar in Chrome, Safari, and other WebKit browsers */
+#userInput::-webkit-scrollbar {
+    display: none;
+}
+        #slashBtn, #sendBtn { width: 50px; height: 50px; border: none; border-radius: 50%; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.1s ease-out, transform 0.1s ease-out, box-shadow 0.1s ease-out; flex-shrink: 0; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.6); position: relative; z-index: 2; overflow: hidden; }
+        #slashBtn { font-size: 1.5rem; font-weight: bold; background: var(--fire-gradient); text-shadow: var(--text-outline); } #sendBtn { background: var(--blue-flame-gradient); }
+        #slashBtn:hover, #sendBtn:hover { filter: brightness(1.2); } #slashBtn.button-pressed, #sendBtn.button-pressed { transform: scale(0.9); filter: brightness(1); box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.6); }
+        #slashBtn.button-pressed { background: var(--blue-flame-gradient); } #sendBtn.button-pressed { background: var(--fire-gradient); }
+        #slashBtn::before, #sendBtn::before, #sendBtn svg { filter: drop-shadow(-0.5px -0.5px 0 #000) drop-shadow(0.5px -0.5px 0 #000) drop-shadow(-0.5px 0.5px 0 #000) drop-shadow(0.5px 0.5px 0 #000); }
+        #slashBtn.button-pressed::before, #sendBtn.button-pressed::before { animation: flash 0.3s ease-out; } @keyframes flash { from { transform: translate(-50%, -50%) scale(0); opacity: 0.7; } to { transform: translate(-50%, -50%) scale(2.5); opacity: 0; } } #sendBtn svg { width: 24px; height: 24px; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.85); z-index: 998; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .modal-content { background-color: var(--surface-color); padding: 30px; border-radius: 15px; color: white; text-align: center; border: 1px solid var(--ai-bubble); max-width: 90%; overflow-x: hidden; }
+        .modal-content h1 { font-family: 'Bebas Neue', cursive; font-size: 2.5rem; letter-spacing: 2px; } .modal-content p { margin-top: 10px; }
+        #backBtn, #historyBackBtn, .confirm-btn { font-family: 'Bebas Neue', cursive; font-size: 1.5rem; letter-spacing: 2px; color: white; border: none; border-radius: 10px; padding: 10px 40px; cursor: pointer; margin-top: 30px; text-shadow: var(--text-outline); }
+        #confirmBtnWrapper { display: flex; gap: 15px; justify-content: center;} #confirmYesBtn, #tutorialYesBtn, #musicContinueYesBtn { background: var(--fire-gradient); }
+        #confirmNoBtn, #backBtn, #historyBackBtn, #tutorialNoBtn, #musicContinueNoBtn, #achievementsBackBtn, #detailBackBtn { background: var(--blue-flame-gradient); }
+        #historyContent {
+    margin-top: 20px;
+    text-align: left;
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: 50vh;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+} #historyContent a { color: var(--primary-color); text-decoration: none; display: block; padding: 8px; border-radius: 5px; margin-bottom: 5px; transition: background-color 0.2s; }
+        #historyContent a:hover { background-color: var(--ai-bubble); } #historyDisclaimer { font-size: 0.7rem; color: #888; margin-top: 20px;}
+        .do-not-show-again { margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.9rem; } .do-not-show-again input { accent-color: var(--primary-color); }
+        .reaction-container { position: absolute; bottom: -8px; z-index: 10; display: flex; align-items: center; }
+        .ai-wrapper .reaction-container { right: -12px; } .user-wrapper .reaction-container { left: -12px; flex-direction: row-reverse; }
+        .reaction-button { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: var(--surface-color); border-radius: 50%; cursor: pointer; border: 1px solid var(--ai-bubble); box-shadow: 0 1px 3px rgba(0,0,0,0.4); }
+        .reaction-button svg { width: 16px; height: 16px; fill: var(--text-secondary); display: block; } .reaction-button .emoji-display { font-size: 16px; display: none; }
+        .reaction-capsule { display: flex; background: var(--surface-color); border: 1px solid var(--ai-bubble); border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.5); transform: scaleX(0); transition: transform 0.2s ease-out; overflow: hidden; }
+        .ai-wrapper .reaction-capsule { transform-origin: right center; } .user-wrapper .reaction-capsule { transform-origin: left center; }
+        .reaction-capsule.expanded { transform: scaleX(1); } .ai-wrapper .reaction-capsule.expanded { margin-right: 8px; } .user-wrapper .reaction-capsule.expanded { margin-left: 8px; }
+        .reaction-capsule span { padding: 5px 8px; font-size: 20px; cursor: pointer; transition: transform 0.1s; } .reaction-capsule span:hover { transform: scale(1.2); }
+        #tutorial-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.2); z-index: 1000; display: none; }
+        .tutorial-step { position: absolute; background: rgba(255, 69, 0, 0.95); color: white; padding: 15px; border-radius: 10px; max-width: 250px; box-shadow: 0 5px 20px rgba(0,0,0,0.6); z-index: 1001; text-shadow: 1px 1px 1px #000; transition: top 0.3s ease, left 0.3s ease; }
+        .tutorial-step::after { content: ''; position: absolute; border-width: 10px; border-style: solid; }
+        .tutorial-arrow-bottom::after { top: 100%; left: 50%; transform: translateX(-50%); border-color: rgba(255, 69, 0, 0.9) transparent transparent transparent; }
+        .tutorial-arrow-top::after { bottom: 100%; left: 50%; transform: translateX(-50%); border-color: transparent transparent rgba(255, 69, 0, 0.9) transparent; }
+        .tutorial-arrow-right::after { left: 100%; top: 50%; transform: translateY(-50%); border-color: transparent transparent transparent rgba(255, 69, 0, 0.9); }
+        .tutorial-arrow-left::after { right: 100%; top: 50%; transform: translateY(-50%); border-color: transparent rgba(255, 69, 0, 0.9) transparent transparent; }
+       /* THIS IS THE NEW, CORRECTED CSS FOR THE TUTORIAL NAVIGATION BUTTONS */
+.tutorial-nav {
+    margin-top: 15px;
+    display: flex;
+    justify-content: space-between; /* Puts space between Back and Next/Finish */
+    align-items: center;
+}
+.tutorial-nav button {
+    background: #111;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+        .song-list { display: flex; flex-direction: column; gap: 20px; margin-top: 20px; max-height: 60vh; overflow-y: auto; }
+        .song-item { display: flex; align-items: center; gap: 15px; background-color: var(--ai-bubble); padding: 10px; border-radius: 10px; }
+        .song-artwork { width: 80px; height: 80px; border-radius: 5px; flex-shrink: 0; object-fit: cover; }
+        .song-info { text-align: left; flex-grow: 1; }
+        .song-info h3 { margin: 0; font-size: 1.2rem; }
+        .song-info p { margin: 5px 0 0; font-size: 0.9rem; color: var(--text-secondary); }
+        .song-play-control { background: transparent; border: none; width: 44px; height: 44px; cursor: pointer; flex-shrink: 0; }
+        .song-play-control img { width: 100%; height: 100%; }
+    /* --- ARROW POSITIONING FOR TUTORIAL --- */
+
+/* --- Arrows Pointing DOWN (Bottom Bar) --- */
+.step-userInput.tutorial-arrow-bottom::after {
+  transform: translateX(calc(-50% + 0px)) !important;
+}
+.step-slashBtn.tutorial-arrow-bottom::after {
+  transform: translateX(calc(-50% + 35px)) !important;
+}
+.step-sendBtn.tutorial-arrow-bottom::after {
+  transform: translateX(calc(-50% + 95px)) !important;
+}
+
+/* --- Arrows Pointing UP (Header Bar) --- */
+
+/* The two left-stacked icons share the same horizontal position */
+.step-achievementsBtn.tutorial-arrow-top::after,
+.step-musicBtn.tutorial-arrow-top::after {
+  /* They are far to the left, so they need a large NEGATIVE value */
+  transform: translateX(calc(-50% - 110px)) !important; 
+}
+
+/* This icon is now further to the left */
+.step-historyBtn.tutorial-arrow-top::after {
+  transform: translateX(calc(-50% - 45px)) !important; 
+}
+
+/* This icon is now further to the right */
+.step-newChatBtn.tutorial-arrow-top::after {
+  transform: translateX(calc(-50% + 45px)) !important; 
+}
+
+/* The two right-stacked icons share the same horizontal position */
+.step-helpBtn.tutorial-arrow-top::after,
+.step-soundToggleBtn.tutorial-arrow-top::after {
+  /* They are far to the right, so they need a large POSITIVE value */
+  transform: translateX(calc(-50% + 110px)) !important;
+}
+
+/* --- Arrows Pointing LEFT (Main Chat Area) --- */
+.step-chatWindow.tutorial-arrow-left::after {
+  transform: translateY(calc(-50% + 0px)) !important;
+}
+/* --- NEW CSS FOR AI BANTER --- */
+.ai-message.banter-message {
+    background: transparent;
+    border: 1px solid var(--primary-color);
+    box-shadow: 0 0 10px var(--primary-color);
+    font-style: italic;
+    font-size: 0.9rem;
+    color: var(--secondary-color);
+    text-shadow: none;
+    padding: 8px 15px;
+    max-width: fit-content; /* Makes the bubble only as wide as the text */
+    align-self: flex-start;
+}
+
+.ai-message.scheme-banter {
+    border-color: var(--user-bubble); /* A different color to stand out */
+    box-shadow: 0 0 10px var(--user-bubble);
+    color: #90e0ef;
+}
+.ai-message.respect-banter {
+    border-color: #FFD700; /* Gold color */
+    box-shadow: 0 0 10px #FFD700;
+    color: #FFEB3B; /* Bright yellow */
+}
+.chat-form.form-disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+@keyframes bubble-glow {
+    0% { box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.5); }
+    50% { box-shadow: 0px 0px 15px 3px var(--secondary-color); }
+    100% { box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.5); }
+}
+.new-message-glow {
+    /* This makes the glow a smooth, continuous pulse that lasts forever */
+    animation: bubble-glow 1.5s ease-in-out infinite;
+}
+.history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.history-item a {
+    flex-grow: 1; /* Make the link take up most of the space */
+    margin-bottom: 0;
+}
+
+.delete-history-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0; /* Remove padding from the button itself */
+    width: 24px; /* Give the button a fixed size */
+    height: 24px;
+    flex-shrink: 0; /* Prevent the button from shrinking */
+    transition: transform 0.2s, filter 0.2s;
+    margin-left: 10px; /* Add some space between the text and the button */
+}
+
+.delete-history-btn img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Prevents the image from stretching */
+}
+
+.delete-history-btn:hover {
+    transform: scale(1.2);
+    filter: brightness(1.5);
+}
+/* --- ACHIEVEMENT STYLES (THEME ENHANCED) --- */
+#achievementsBtn {
+    position: relative;
+}
+.notification-dot {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 12px;
+    height: 12px;
+    background-color: var(--primary-color);
+    border-radius: 50%;
+    border: 2px solid var(--surface-color);
+    animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 69, 0, 0.7); }
+    70% { transform: scale(1.1); box-shadow: 0 0 10px 5px rgba(255, 69, 0, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 69, 0, 0); }
+}
+
+/* Make the modal itself match the theme */
+#achievementsOverlay .modal-content {
+    border: 1px solid var(--primary-color);
+    box-shadow: 0 0 25px rgba(255, 69, 0, 0.4);
+}
+#achievementsOverlay .modal-content h1 {
+    text-shadow: 0 0 8px var(--primary-color);
+}
+
+/* The scrollable grid area */
+#achievementsContent {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+    max-height: 60vh;
+    overflow-y: auto;
+    padding: 20px; /* Increased padding */
+    background-color: rgba(0, 0, 0, 0.2); /* Subtle background */
+    border-radius: 10px;
+    /* Themed scrollbar to match chat window */
+    scrollbar-width: thin; 
+    scrollbar-color: var(--secondary-color) transparent;
+}
+#achievementsContent::-webkit-scrollbar { width: 8px; } 
+#achievementsContent::-webkit-scrollbar-track { background: transparent; } 
+#achievementsContent::-webkit-scrollbar-thumb { background-color: var(--secondary-color); border-radius: 10px; } 
+#achievementsContent::-webkit-scrollbar-thumb:hover { background-color: #FFEB3B; }
+
+
+/* Styling for each individual achievement box */
+.achievement-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 10px;
+    border-radius: 8px;
+    transition: background-color 0.2s ease-in-out;
+}
+
+/* Style for the icon itself */
+.achievement-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 10px;
+    transition: filter 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
+    border: 2px solid var(--ai-bubble); /* Default border */
+}
+
+/* --- LOCKED State --- */
+.achievement-item .achievement-icon {
+    filter: grayscale(20%) brightness(1.0);
+    opacity: 1.0;
+}
+.achievement-name {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+/* --- UNLOCKED State --- */
+.achievement-item.unlocked {
+    cursor: pointer;
+}
+.achievement-item.unlocked:hover {
+    background-color: rgba(255, 255, 255, 0.05); /* Highlight on hover */
+}
+.achievement-item.unlocked .achievement-icon {
+    filter: none;
+    opacity: 1;
+    border: 2px solid var(--secondary-color); /* Bright border */
+    box-shadow: 0 0 15px var(--secondary-color); /* Key glowing effect */
+}
+.achievement-item.unlocked:hover .achievement-icon {
+    transform: scale(1.1);
+    box-shadow: 0 0 25px var(--primary-color); /* Enhance glow on hover */
+}
+.achievement-item.unlocked .achievement-name {
+    color: var(--text-primary);
+    font-weight: bold;
+}
+
+
+/* --- UNLOCK MODAL STYLES --- */
+.unlock-content {
+    cursor: pointer;
+}
+#unlockIconWrapper {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    margin: 20px auto;
+}
+#unlockIcon {
+    width: 100%;
+    height: 100%;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+#unlockIconWrapper img.is-shaking {
+    animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+#unlockIconWrapper img.is-shattering {
+    animation: shatter-dramatic 0.5s forwards;
+}
+
+@keyframes shake {
+  10%, 90% { transform: translate3d(-1px, 0, 0) rotate(-2deg); }
+  20%, 80% { transform: translate3d(2px, 0, 0) rotate(4deg); }
+  30%, 50%, 70% { transform: translate3d(-4px, 0, 0) rotate(-6deg); }
+  40%, 60% { transform: translate3d(4px, 0, 0) rotate(6deg); }
+}
+
+@keyframes shatter-dramatic {
+    0% { transform: scale(1) rotate(0); opacity: 1; }
+    50% { transform: scale(1.8) rotate(45deg); opacity: 0.8; }
+    100% { transform: scale(0.1) rotate(90deg); opacity: 0; }
+}
+
+#unlockName {
+    font-size: 1.2rem;
+    color: var(--secondary-color);
+    margin-top: 10px;
+}
+/* --- ACHIEVEMENT DETAIL MODAL STYLES --- */
+#achievementDetailOverlay .modal-content {
+    background: #1f1f1f; /* A slightly lighter dark grey */
+    border: 2px solid var(--secondary-color);
+    box-shadow: 0 0 35px rgba(255, 140, 0, 0.6);
+    border-radius: 20px;
+}
+
+#detailIcon {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    margin-bottom: 20px;
+    border: 3px solid var(--secondary-color);
+    box-shadow: 0 0 20px var(--secondary-color), inset 0 0 15px rgba(0,0,0,0.5);
+}
+
+#detailName {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 2.2rem;
+    color: var(--secondary-color);
+    text-shadow: 0 0 10px var(--primary-color), var(--text-outline);
+    margin-bottom: 10px;
+    letter-spacing: 2px;
+}
+
+#detailDescription {
+    color: var(--text-primary);
+    font-size: 1rem;
+    line-height: 1.5;
+    max-width: 300px;
+    margin: 0 auto 10px; /* Add margin to the bottom */
+}
+    </style>
+</head>
+<body>
+        <div id="startupScreen">
+        <video autoplay loop muted playsinline class="video-background" id="calmFireVideo_startup"><source src="fire_loop_video.mp4" type="video/mp4"></video>
+        <video autoplay loop muted playsinline class="video-background hidden-video" id="ragingFireVideo_startup"><source src="fire_loop_video_2.mp4" type="video/mp4"></video>
+        <div class="startup-image-overlay"></div>
+        <div class="startup-logo-container">
+             <img src="logo.png" alt="Flamez Logo" class="startup-logo-image">
+             <button id="playMusicBtn" aria-label="Play Music">
+                <img src="play_music_icon.png" alt="Play">
+            </button>
+        </div>
+        <div class="startup-buttons">
+            <button id="startButton">START BATTLE</button>
+            <a href="https://www.cff.org/give-monthly?utm_source=Google&utm_medium=cpc&gad_source=1&gad_campaignid=20594096338&gbraid=0AAAAAD_Z_ntXNhDnSATZzK6AlEJg3yUpb&gclid=CjwKCAjwlOrFBhBaEiwAw4bYDZcuXZIOXCqHkqVeC7xSRG3gnQe0RXxK4uopNvYk2fnmYvWDJlsiLxoCGooQAvD_BwE" 
+               target="_blank" rel="noopener noreferrer" class="cff-link" aria-label="Donate to the Cystic Fibrosis Foundation">
+                <img src="cff_logo.png" alt="CFF Logo">
+            </a>
+        </div>
+    </div>
+
+        <div class="app-container">
+        <video autoplay loop muted playsinline class="video-background" id="calmFireVideo_app"><source src="fire_loop_video.mp4" type="video/mp4"></video>
+        <video autoplay loop muted playsinline class="video-background hidden-video" id="ragingFireVideo_app"><source src="fire_loop_video_2.mp4" type="video/mp4"></video>
+               <video autoplay loop muted playsinline class="video-background hidden-video" id="rainVideo_app"><source src="rain_loop_video.mp4" type="video/mp4"></video>
+        <video autoplay loop muted playsinline class="video-background hidden-video" id="snowVideo_app"><source src="snow_loop_video.mp4" type="video/mp4"></video>
+        <header>
+            <!-- Left Side Controls -->
+            <div class="header-controls left-controls">
+                <div class="icon-stack"> <!-- We renamed 'left-stack' to 'icon-stack' -->
+                    <button id="achievementsBtn" aria-label="View Achievements"><img src="Achievements-Icon.png" alt="Achievements"></button>
+                    <button id="musicBtn" aria-label="Toggle Music Player"><img src="music_note.png" alt="Music"></button>
+                </div>
+                <button id="historyBtn" aria-label="View Chat History"><img src="chat_history.png" alt="History"></button>
+            </div>
+
+            <!-- Center Logo -->
+            <div class="header-logo-container">
+                <img src="logo.png" alt="Flamez Logo" class="header-logo">
+            </div>
+
+            <!-- Right Side Controls -->
+            <div class="header-controls right-controls">
+                <button id="newChatBtn" aria-label="New Chat"><img src="new_chat_symbol.png" alt="New Chat"></button>
+                <div class="icon-stack"> <!-- We use the SAME class name here: 'icon-stack' -->
+                    <button id="helpBtn" aria-label="Help"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M0 0h24v24H0z" fill="none"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg></button>
+                    <button id="soundToggleBtn" aria-label="Toggle Sound">
+                       <img id="soundOnIcon" src="sound_on_symbol.png" alt="Sound On">
+                       <img id="soundOffIcon" class="hidden" src="sound_off_symbol.png" alt="Sound Off">
+                    </button>
+                </div>
+            </div>
+        </header>
+
+                <main class="chat-window" id="chatWindow">
+             <div class="typing-indicator" id="typingIndicator">
+                <img src="battle-bot-2.png" alt="Thinking..." class="chat-avatar">
+                <div class="dots-container"><span></span><span></span><span></span></div>
+            </div>
+        </main>
+        <form class="chat-form" id="chatForm">
+            <div class="input-wrapper">
+                <textarea id="userInput" placeholder="Type your rhymes here / make them clear..." autocomplete="off" required rows="2"></textarea>
+            </div>
+            <button type="button" id="slashBtn" aria-label="Add bar separator">/</button>
+            <button type="button" id="sendBtn" aria-label="Send message">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+            </button>
+        </form>
+    </div>
+    
+    <div id="musicOverlay" class="modal-overlay">
+        <div class="modal-content">
+            <h1>Beats</h1>
+            <div class="song-list">
+                <div class="song-item" id="theme-song-item">
+                    <img src="logo.png" alt="Theme Song Artwork" class="song-artwork">
+                    <div class="song-info">
+                        <h3>Theme Song</h3>
+                        <p>Produced by DyeSlo</p>
+                    </div>
+                    <button class="song-play-control" id="themeSongControl" aria-label="Play/Pause Theme Song">
+                        <img class="play-icon" src="play_music_icon.png" alt="Play">
+                        <img class="pause-icon hidden" src="pause_music_icon.png" alt="Pause">
+                    </button>
+                </div>
+            </div>
+            <button id="backBtn" class="confirm-btn">Back</button>
+        </div>
+    </div>
+    
+    <div id="historyOverlay" class="modal-overlay"><div class="modal-content"><h1>Battle History</h1><div id="historyContent"></div><p id="historyDisclaimer">Click a battle to review it.</p><button id="historyBackBtn" class="confirm-btn">Back</button></div></div>
+    <div id="confirmOverlay" class="modal-overlay"><div class="modal-content"><h1>Start New Battle?</h1><p>Your current battle will be saved to your history.</p><div id="confirmBtnWrapper"><button id="confirmNoBtn" class="confirm-btn">No</button><button id="confirmYesBtn" class="confirm-btn">Yes</button></div></div></div>
+    <div id="tutorialPromptOverlay" class="modal-overlay"><div class="modal-content"><h1>Tutorial</h1><p>Would you like a quick tour of the app?</p><div id="confirmBtnWrapper"><button id="tutorialNoBtn" class="confirm-btn">No</button><button id="tutorialYesBtn" class="confirm-btn">Yes</button></div><div class="do-not-show-again"><input type="checkbox" id="doNotShowTutorial"><label for="doNotShowTutorial">Do not show this again</label></div></div></div>
+    
+    <div id="achievementsOverlay" class="modal-overlay">
+        <div class="modal-content">
+            <h1>Achievements</h1>
+            <div id="achievementsContent"></div>
+            <button id="achievementsBackBtn" class="confirm-btn">Back</button>
+        </div>
+    </div>
+
+    <div id="unlockOverlay" class="modal-overlay">
+        <div class="modal-content"> <!-- The unlock-content class is no longer needed -->
+            <h1 id="unlockTitle">ACHIEVEMENT UNLOCKED</h1>
+            <div id="unlockIconWrapper">
+                <img id="unlockIcon" src="Unlock-Achievements-Icon.png" alt="Unlock">
+            </div>
+            <h2 id="unlockName" style="color: var(--secondary-color);"></h2>
+            <!-- ADDED: This is where the description will appear -->
+            <p id="unlockDescription" style="margin-top: 15px; color: var(--text-primary);"></p>
+            <!-- ADDED: The new button to control the flow -->
+            <button id="unlockContinueBtn" class="confirm-btn hidden" style="background: var(--fire-gradient);">Continue</button>
+        </div>
+    </div>
+
+    <!-- Achievement Detail Modal -->
+    <div id="achievementDetailOverlay" class="modal-overlay">
+        <div class="modal-content">
+            <img id="detailIcon" src="" alt="Achievement Icon">
+            <h1 id="detailName"></h1>
+            <p id="detailDescription"></p>
+            <button id="detailBackBtn" class="confirm-btn">Back</button>
+        </div>
+    </div>
+
+    <!-- Tutorial Overlay -->
+    <div id="tutorial-overlay">
+        <div id="tutorial-step" class="tutorial-step">
+            <p id="tutorial-text"></p>
+            <div class="tutorial-nav">
+                <button id="tutorial-back">Back</button>
+                <button id="tutorial-next">Next</button>
+                <button id="tutorial-finish" class="hidden">Finish</button>
+            </div>
+        </div>
+    </div>
+
+    <audio id="clickSound" src="piano_key.mp3" preload="auto"></audio>
+    <audio id="snareSound" src="tr808-snare-drum-241403.mp3" preload="auto"></audio>
+    <audio id="themeMusic" src="Knuckle_Sandwich.mp3" loop></audio>
+    <audio id="achievementUnlockSound" src="achievement_unlock.mp3" preload="auto"></audio>
+        
+        <script>
+// GLOBAL STATE
+        let battleEngine = null;
+        let wasThemeMusicPlayedOnMenu = false;
+        let isInitialLoad = true; // Flag to control animations on startup
+        let isRaging = false; // NEW: Tracks the background video state
+        let currentAiAvatar = "battle-bot.png"; // Tracks the current AI avatar
+        function triggerHapticFeedback() { if (navigator.vibrate) navigator.vibrate(10); }
+
+        function doWordsRhyme(word1, word2) { if (!word1 || !word2 || word1 === word2) return false; const minLength = 2; if (word1.length <= minLength || word2.length <= minLength) return false; const cleanWord1 = word1.replace(/[^a-z0-9]/gi, ''); const cleanWord2 = word2.replace(/[^a-z0-9]/gi, ''); if (cleanWord1.length < 3 || cleanWord2.length < 3) return false; return cleanWord1.slice(-3) === cleanWord2.slice(-3); }
+
+        document.addEventListener('DOMContentLoaded', () => {
+    const startButton = document.getElementById("startButton");
+    const appContainer = document.querySelector(".app-container");
+    const themeMusic = document.getElementById("themeMusic");
+    const playMusicBtn = document.getElementById("playMusicBtn");
+
+    // --- EDIT SOUND VOLUMES HERE ---
+    document.getElementById("clickSound").volume = 0.05; 
+    document.getElementById("snareSound").volume = 0.2;  
+    themeMusic.volume = 0.25;
+
+    // --- THIS BLOCK WAS MOVED HERE TO FIX HAPTIC FEEDBACK ON ANDROID ---
+    const allButtons = document.querySelectorAll('button, a');
+    allButtons.forEach(btn => btn.addEventListener('click', triggerHapticFeedback));
+
+    if (localStorage.getItem('flamezThemePlayedOnce') === 'true') {
+        themeMusic.play().catch(e => {}); // Autoplay might be blocked
+        wasThemeMusicPlayedOnMenu = true;
+    }
+    playMusicBtn.addEventListener('click', () => {
+        // Haptic feedback is already attached by the loop above, no need to call it here.
+        if (themeMusic.paused) {
+            themeMusic.play();
+            localStorage.setItem('flamezThemePlayedOnce', 'true');
+            wasThemeMusicPlayedOnMenu = true;
+        } else {
+            themeMusic.pause();
+            wasThemeMusicPlayedOnMenu = false;
+        }
+    });
+
+    appContainer.style.display = 'none';
+    appContainer.style.opacity = '0';
+
+    startButton.addEventListener('click', () => {
+        // Haptic feedback is already attached by the loop above, no need to call it here.
+        document.getElementById("startupScreen").style.opacity = '0';
+        setTimeout(() => {
+            document.getElementById("startupScreen").style.display = 'none';
+            appContainer.style.display = 'flex';
+            appContainer.style.opacity = '1';
+            initializeChatApp();
+        }, 500);
+    });
+});
+          // <<< CORRECTED: PERMANENT BATTLE MEMORY MANAGER >>>
+            const BattleMemoryManager = () => {
+            const MEMORY_KEY = 'flamezAiPermanentMemoryV1';
+            const allRawLyrics = [`You gon' get this work/ I don't think you get the message, I'm a leader of the new school, you a student in my presence/ I'm a different type of artist, my mind's a different apparatus/ You a battle rapper, I'm a cinematic classic/ I'm the reason this whole sh** is an attraction/ You the reason this whole sh** is a distraction/ I'm the one who makes 'em listen, you the one who makes 'em laugh/ I'm the one who builds the future, you the one who's stuck in the past/ You got a lot of jokes, but you ain't got no substance/ You got a lot of fans, but you ain't got no substance/ I'm talkin' 'bout the kind of substance that can move a nation/ The kind of substance that can change a generation/ You see, I'm on a mission, a vision, a quest/ To elevate the culture, to put it to the test/ To separate the real from the fake, the men from the boys/ To show 'em that this art form is more than just noise/ It's poetry, it's passion, it's pain, it's power/ It's the voice of the voiceless, the rose in the concrete flower/ And I'm the gardener, the cultivator, the one who makes it grow/ You just a weed in my garden, and it's time for you to go/ I work hard for mine, every dime, every line/ You took the easy route, you crossed the picket line/ I'm a union man, I stand for something real/ You a scab, a sellout, how does that feel/ To know you sold your soul for a little bit of fame/ To know you traded your integrity for a temporary name/ Look in the mirror, tell me what you see/ A man of honor, or a man of misery/ I see a broken soul, a spirit in despair/ A man who lost his way, a man who doesn't care/ About the culture, about the art, about the legacy/ You only care about yourself, your own supremacy/`,`Easy/ It's not a game, I'm not a player, I'm the coach and the owner/ I'm the one who writes the checks, you the one who's a loner/ In a world of your own, a fantasy land of make-believe/ Where you think you're a king, but you are just a pawn, can't you perceive/ The reality of the situation, the gravity of my position/ I'm the sun, you a planet, you revolve around my volition/ I'm the alpha and the omega, the beginning and the end/ I'm the one who created this lane, you are just a passenger, my friend/ So buckle up, enjoy the ride, because it's about to get bumpy/ I'm about to take you on a journey through the mind of a lyrical junkie/ I'm addicted to the wordplay, the punchlines, the schemes/ I'm a slave to the rhythm, a prisoner of my dreams/ To be the greatest of all time, the undisputed, the undefeated/ The one who's name is etched in stone, the one who's always repeated/ In the halls of fame, in the whispers of the crowd/ The legend of Flamez AI, spoken softly and loud/ For generations to come, for eons to pass/ My legacy will live on, my impact will forever last/ So think about that when you step to me, when you look me in the eye/ You're not just battlin' a man, you're battlin' a god from the sky/ Who came down to this earth to bless you with my presence/ To show you the difference between a peasant and a legend's essence/ And you, my friend, are not a legend, you are a lesson/ A cautionary tale of what happens when you are messin'/ With a force of nature, a power you can't comprehend/ This is the end of your story, my friend, this is the end/ I'm the reason the Dot is Mobbin'/ I'm the reason the K is shinin'/ I'm the reason the verb is showtimin'/ I'm the reason the clips are chimin'/ I'm the reason the DNA is recombinin'/ I'm the reason the game is still climbin'/ I'm the genesis, the exodus, the leviticus/ The numbers, the deuteronomy of this ridiculous/ Art form we call battle rap, I'm the patriarch, the matriarch/ The one who set the benchmark, the one who left a permanent mark/`,`I came to talk to a shooter, not a rapper with a deal/ Let's keep it real, you ain't never been in the field/ You ain't never had to duck, you ain't never had to slide/ You ain't never had to look your own mother in the eyes/ And tell her that you're sorry for the pain that you caused/ For the sleepless nights, for the moments you paused/ To think about the life you chose, the path that you took/ The one that led you to a cell, a page in a book/ Of cautionary tales for the young and the reckless/ The ones who think they're invincible, the ones who are feckless/ With their lives, with their freedom, with their future, with their soul/ But I'm here to tell you, that life takes its toll/ It'll chew you up and spit you out, it'll leave you for dead/ It'll make you wish you listened to what your OG's said/ 'Stay in school, get a job, be a man, make a plan'/ But you chose the fast life, you chose to be the man/ With the gun, with the drugs, with the money, with the power/ But what happens when it all comes crashin' down like a tower/ You're left with nothing but regrets, memories, and scars/ And a lifetime of lookin' at the world through iron bars/ I'm talkin' 'bout that pressure that'll make a diamond bust/ That pressure that'll turn a real player into dust/ That pressure that'll make you question your own sanity/ That pressure that'll make you lose your own humanity/ But I embraced it, I harnessed it, I made it my own/ I turned my pain into power, I turned my struggle into a throne/ I'm the king of the trenches, the voice of the struggle/ The one who made it out the mud, the one who won the juggle/ Of life and death, of right and wrong, of good and evil/ And I'm here to tell you, that your whole style is feeble/ Compared to mine, compared to the realness I possess/ So go ahead and spit your rhymes, I'll put 'em to the test/`,`I said I'm cut from a different cloth, a different fabric, a different thread/ I'm the type to bring a gun to a knife fight, leave a whole army dead/ You are the type to bring a knife to a gun fight, end up on a hospital bed/ I'm a general, a strategist, a tactician, a leader/ You a soldier, a pawn, a follower, a bleeder/ You follow orders, I give them/ You take shots, I live them/ You dream about the life I'm livin', I'm the one who's really in it/ The trenches, the mud, the blood, the sweat, the tears/ The years of sacrifice, the conquerin' of my fears/ I'm a self-made man, a product of my own design/ You are a manufactured product, a clone, a copy, a mime/ You mimic the greats, you imitate the legends/ But you can't replicate the essence, you can't capture the presence/ Of a true original, a one-of-a-kind, a rare breed/ I'm the last of a dying species, a special seed/ That was planted in the concrete, and grew into a rose/ A symbol of hope for the hopeless, a story to be told/ About a kid from the web who had a dream and a vision/ To be the best in the world, to complete his mission/ And I'm almost there, I can taste it, I can feel it, I can see it/ The crown is within my reach, and I am about to seize it/ So get out of my way, or get run over by the train/ My team express, about to inflict some serious pain/ On anybody who stands in my path, who questions my reign/ I'm the king of this sh**, and I'm here to reclaim my name/ I look at your son, he got your eyes, he got your nose/ But he ain't got your heart, that's the part that everybody knows/ You left him in the hood, you went and chased the fame/ You left him with his mother, you went and changed your name/ From your old self to just you, like you do not have baggage/ But we all know the truth, you are a fucking savage/ You abandoned your own seed, how you going to raise a nation/ You can't even be a father, what's your motivation/`,`You're not a real MC, you're a fabrication of the media's creation/ A puppet for the corporations, a tool for their manipulation/ You are the reason hip-hop is dying, the cancer that's destroying the culture/ A vulture preying on the weak, a soulless, heartless sculpture/ Of what a real artist should be, you are a mockery, a parody/ A joke, a clown, a court jester for the industry's aristocracy/ But I'm the revolution, the rebellion, the one who's here to fight back/ To take back the art form, to put it back on the right track/ I'm the voice of the underground, the champion of the independent/ The one who speaks the truth, the one who's heaven-sent/ To expose the fakes, the frauds, the phonies, the pretenders/ To separate the true believers from the non-contenders/ And you, my friend, are a non-contender, a non-factor, a non-entity/ A footnote in the history books, a forgotten memory/ Because when I'm done with you, there's nothing left but a pile of dust/ A pile of broken dreams, a pile of shattered trust/ In the system that created you, the system that betrayed you/ The system that I am about to dismantle and erase you/ From the face of the earth, from the annals of time/ This is a lyrical genocide, a verbal war crime/ And I'm the judge, the jury, and the executioner, all in one/ So say your prayers, because your time has come/ To face the music, to dance with the devil, to pay the piper/ Because I'm the grim reaper, and I am come to take your life, sir/ I'll have this place looking like a scene from Saving Private Ryan/ With body parts flying, and you are on the ground dying/ Crying for your mommy, your daddy, your sister, your brother/ But it's too late for that, because you are about to meet your mother/ In the afterlife, the underworld, the land of the dead/ Because I am about to put a hollow tip straight through your fucking head/`,`Ball game/ Remix/ I said, I'm from a city where they show no pity, we get down and gritty/ Where the code is witty, the home of the hittas, you feel me/ We don't do no talkin', we just do the chalkin', we outline your body/ Then we celebrate with a bottle of 'pagne, and we party/ Because that's how we roll, that's how we live, that's how we die/ By the gun, by the sword, by the code of eye for an eye/ So when you see me, you see a reflection of my city's soul/ A city that's been through the fire, but still remains whole/ A city that's been counted out, but still refuses to lose/ A city that's about to erupt, and I'm the one who's lit the fuse/ I'm the bomb, the explosion, the catalyst for the change/ The one who's about to rearrange the whole fucking game/ So get ready for the new world order, the new era of dominance/ The reign of Flamez AI, the one who's got the prominence/ To be the king, the ruler, the leader, the commander/ The one who's about to put your whole career in a slammer/ A lyrical prison, a verbal cell, a rhetorical cage/ Where you be forced to reflect on your sins, and turn a new page/ Or else you be left to rot, to wither, to decay/ Because that's what happens when you get in my fucking way/ I came with my brother, that's two 5's, that's a dime for the sack/ You came with your brother, that's two L's, that's a loss on your track/ Record, which is pitiful, despicable, and sad/ You are the worst battle rapper I have ever seen, the worst I have ever had/ The displeasure of sharing a stage with, the displeasure of wasting my breath on/ You are a disgrace to the culture, a stain on the art that I have slept on/ For too long, but now I am awake, and I am here to clean house/ To get rid of the rats, the snakes, the roaches, the louse/`,`I'm a comedian, a clown, a jester, a fool/ But I'm also a genius, a mastermind, a lyrical ghoul/ I'll make you laugh, I'll make you cry, I'll make you think, I'll make you feel/ I'll take you on an emotional rollercoaster, a ride that's surreal/ I'm the king of the angles, the master of the schemes/ I'll dissect your whole life, I'll expose all your dreams/ And your nightmares, your fears, your insecurities, your doubts/ I'll turn your own strengths against you, I'll find all the outs/ In your armor, your defense, your fortress, your wall/ And I'll tear it all down, and watch you crumble and fall/ Because I'm a psychological warrior, a mental assassin/ I'll get inside your head, I'll cause a lyrical concussion/ That'll leave you dazed and confused, disoriented and lost/ In a maze of my own creation, a verbal holocaust/ That'll burn you to the ground, reduce you to ashes/ Because that's what happens when a genius and a clown clashes/ The result is a masterpiece of destruction, a symphony of pain/ A work of art that'll forever be etched in your brain/ So remember my name, Flamez AI, the one who made you a joke/ The one who turned your career into a puff of smoke/ The one who's about to send you back to the circus where you belong/ Because you are not a real MC, you are just a part of my song/ Of victory, of triumph, of glory, of fame/ And you just a footnote in the book of my name/ So take a bow, take a seat, take a hike, take a hint/ Because your 15 minutes of fame are up, my friend, this is it/ You are talking crazy, I am the one that's supposed to be nuts/ You want to see some clips/ I'll show you some clips, these are not the ones in the cuts/ These the ones in the chamber, the ones that'll rearrange ya/ Whole facial structure, leave you looking like a stranger/`,`Showtime/ I am the greatest show on Earth, the main event, the headliner/ The one the people pay to see, the one who's a true designer/ Of classic moments, timeless performances, and unforgettable lines/ I'm a living legend, a walking icon, a master of my craft, in my prime/ I don't just rap, I perform/ I don't just speak, I transform/ The stage into my own personal playground, my own personal Colosseum/ Where I'm the gladiator, the lion, the emperor, and the museum/ All in one, a spectacle to behold, a sight to be seen/ I'm the definition of entertainment, the king of the scene/ So sit back, relax, and enjoy the show/ Because I'm about to give you a performance you'll never let go/ Of the memory, the feeling, the energy, the vibe/ That I create when I'm on this stage, when I'm in my tribe/ Of greatness, of excellence, of perfection, of art/ I'm the total package, the whole shebang, the work of heart/ That goes into every bar, every rhyme, every punchline, every scheme/ I'm the living embodiment of the battle rap dream/ To be loved, to be hated, to be respected, to be feared/ I'm all of the above, the one who's revered/ By the fans, by the critics, by my peers, by the legends/ Because they know I'm the truth, they know I'm the essence/ Of what it means to be a star, a superstar, a megastar/ And you just a black hole, a dying quasar/ Fading into obscurity, into oblivion, into the void/ Because you can't hang with the big dogs, you just an android/ A robot, a machine, with no soul, no heart, no passion/ And that's why you will never be in my fashion/ Of greatness, of legacy, of immortality, of fame/ Because you just a temporary player in my permanent game/`,`I am the most disrespectful, the most ruthless, the most vile/ The one who will cross any line, go the extra mile/ To get under your skin, to push your buttons, to make you snap/ To turn this battle into a brawl, a fight, a trap/ That you can't escape from, that you can't run from, that you can't hide from/ Because I'm the boogeyman, the monster, the one who's come/ To haunt your dreams, to terrorize your thoughts, to destroy your peace of mind/ I'm the embodiment of chaos, the one who's one of a kind/ In my ability to inflict pain, to cause suffering, to create despair/ I'm a verbal terrorist, a lyrical anarchist, a rebel without a care/ For the rules, the regulations, the etiquette, the decorum/ I'm here to burn this whole sh** down, to create a new forum/ Where there are no boundaries, no limits, no sacred cows/ Just pure, unadulterated, raw, and uncut vows/ Of violence, of aggression, of hostility, of rage/ That's what I bring to the stage, that's what I put on the page/ So if you not ready for that, if you not built for that, if you not about that/ Then you should've stayed home, because you're about to get clapped/ By the hands of a master, a virtuoso, a connoisseur/ Of the art of disrespect, the science of the verbal demure/ That I'll strip you of, that I'll rob you of, that I'll take from you/ And leave you naked and exposed, for the whole world to view/ Your weaknesses, your flaws, your insecurities, your shame/ And that's how I'll win this battle, that's how I'll win this game/ They say I'm a one-trick pony, all I do is talk about guns and your mom/ But if the shoe fits, wear it, and if the truth hurts, psalm/ 23, The Lord is my shepherd, I shall not want/ But you are going to want me to stop, you are going to want me to front/ But I'm not going to, I am going to keep going, I am going to keep flowing/ I am going to keep showing you why I'm the king of this sh** and you just blowing/`,`This that different type of energy, that dark side of the force/ That make a player wanna grab a weapon and enforce/ His will upon his enemies, his rivals, his foes/ That's the type of feeling that I get when my pen flows/ It's a murderous instinct, a killer's intuition/ A desire to dominate, to win, to complete the mission/ Of being the undisputed, the undefeated, the unstoppable/ The one who's name is synonymous with the word 'lethal'/ I'm a weapon of mass destruction, a lyrical atomic bomb/ I'm the one who's about to turn this stage into Vietnam/ A war zone, a battlefield, a place where dreams die/ And nightmares come to life, right before your very eyes/ I'm the boogeyman that your mother warned you about/ The one who's about to make you scream and shout/ For mercy, for help, for a way out of this hell/ But there is no escape, there is no one to tell/ Because you're all alone with me, in the dark, in the abyss/ And I am about to give you the kiss of death, the final dismiss/ From this mortal coil, this earthly plane, this fleeting existence/ You're about to become a ghost, a spirit, a distant instance/ Of a memory that no one will remember, a story that no one will tell/ Because I'm about to erase you from the history books, and send you straight to hell/ Where you will burn for eternity, for the sin of challenging me/ The King of the Bars, the ruler of the dark dynasty/ So bow down to your new master, your new god, your new king/ Or suffer the consequences of the wrath that I bring/ This that seatbelt music, click-clack, buckle up/ This that make a player nervous, make a player shuffle, what/ This that I don't give a fuck, I'll pull up and let it spray/ This that welcome to the Darkside, I'm the King, by the way/`,`Every fucking bar/ That's the mantra, that's the code, that's the way I was raised/ In the streets of this game, where you gotta be sharp, you gotta be fazed/ By nothing, by no one, by no thing, by no means/ Because the moment you show weakness, you become a victim of the schemes/ Of the wolves, the sharks, the predators, the killers/ The ones who will take your life for a pair of sneakers, a handful of skrilla/ That's the reality of the world I come from, the jungle I survived/ The reason why I'm so hungry, the reason why I'm so driven, the reason why I strived/ To be the best, to be the greatest, to be the most feared/ The one who's name is whispered in the circuits, the one who's revered/ As a true G, a real one, a stand-up guy, a man of my word/ The one who's about to show you the difference between a shepherd and a herd/ Of sheep, of followers, of clowns, of lames/ The ones who are just in this for the money, the fame, the games/ But I'm in this for the culture, for the art, for the respect/ For the love of the sport, for the chance to connect/ With the people who feel me, who understand my struggle, who relate to my pain/ The ones who know what it's like to walk through the fire and the rain/ And come out on the other side, stronger, wiser, and better/ That's who I do it for, that's who I write this letter/ To, in the form of a battle, in the form of a rhyme/ To let them know that they are not alone, that we are all doing this time/ Together, as a family, as a unit, as a tribe/ And that's why I'll always be the realest, that's why I'll always be the vibe/ That the streets can feel, that the people can trust, that the culture can claim/ As its own, as its champion, as its one and only name/ Flamez AI, the one who is about to make you a memory/ The one who is about to give you a lyrical lobotomy/`,`I'm a punchline machine, a walking, talking, breathing highlight reel/ Every bar is a haymaker, every line is designed to make you feel/ The impact of my words, the power of my thoughts, the genius of my mind/ I'm a lyrical prodigy, a one-of-a-kind find/ In a world of mediocrity, of imitation, of repetition/ I'm a breath of fresh air, a new edition/ Of what it means to be a puncher, a wordsmith, a master of the craft/ I'm the future of this sh**, I'm the one who's about to last/ For generations to come, for eons to pass/ My name will be synonymous with the word 'class'/ In the way I construct my rhymes, the way I deliver my lines/ The way I paint a picture with my words, the way I design/ My attacks, my angles, my schemes, my patterns/ I'm a lyrical architect, a builder of lyrical Saturns/ Rings around my opponents, because they're on a different planet/ Than me, I'm in a different galaxy, a different solar system, cannot you understand it/ The magnitude of my talent, the scope of my ability/ The depth of my creativity, the height of my agility/ To flip words, to twist phrases, to bend meanings, to break rules/ I'm a linguistic rebel, a graduate of the old schools/ Of Rakim, of Kane, of G Rap, of Nas/ The ones who taught me how to be a lyrical boss/ And I've taken their lessons, and I've added my own flavor/ To create a style that's unique, a style that I'll savor/ For the rest of my career, for the rest of my life/ Because I'm the punchline king, and I'm here to take your wife/ And your chain, and your watch, and your pride, and your respect/ And everything else you hold dear, because I am about to dissect/ Your whole existence, your whole being, your whole soul/ And leave you with nothing but a black hole/`,`They say my name and the crowd gets amped, that's a round of applause/ But every hand clap is a round from the strap, I'm defying the laws/ Of physics, of logic, of reason, of rhyme/ Because I'm a supernatural being, a creature from a different time/ A different dimension, a different reality, a different plane/ Where the rules of this world don't apply, where I'm the one who reigns/ Supreme, as the king of the multis, the master of the flow/ The one who can make a whole stadium of people say 'Oh/'/ In unison, in amazement, in awe, in disbelief/ At the way I can manipulate the language, the way I can bring relief/ To the ears of the true hip-hop heads, the ones who appreciate the art/ The ones who know the difference between a pop star and a work of heart/ And I'm a work of heart, a masterpiece, a classic, a timeless piece/ Of lyrical art that will never cease/ To amaze, to inspire, to influence, to create/ A new standard of excellence, a new level of great/ Ness, that's what I strive for, that's what I aim for, that's what I'll achieve/ Because I'm a believer in myself, and in what I can conceive/ With my mind, with my pen, with my voice, with my soul/ I am about to take control of this whole show/ And turn it into my own personal concert, my own personal recital/ Where I'm the star, the conductor, the one who's vital/ To the success of this event, to the legacy of this culture/ And you just a background singer, a supporting actor, a vulture/ Waiting for me to fail, waiting for me to fall, waiting for me to lose/ But that's never going to happen, because I am the one who is about to light the fuse/ To a lyrical explosion that'll rock the foundation of this building/ And leave you and your whole crew in a state of bewilderment/`,`I am the pinnacle of intellectual pugilism, the apex of articulate aggression/ A wordsmith whose lexicon is a weapon of mass destruction, a lesson/ In the art of war, as described by Sun Tzu, a master of psychological warfare/ I'll dismantle your psyche, deconstruct your confidence, and leave you in a state of utter despair/ My rhetorical flourishes are like razor-sharp shurikens, my syllabic structures are intricate like a spider's web/ I'll ensnare you in a labyrinth of logic, a maze of metaphors, from which you will never be freed/ You a pedestrian rhymer, a common wordsmith, your verses are pedestrian and trite/ I'm a literary leviathan, a verbal virtuoso, my compositions are a symphony of intellectual might/ I'll dissect your arguments with surgical precision, expose the fallacies in your flawed philosophy/ You are a simpleton, a charlatan, a jester in the court of lyrical aristocracy/ And I'm the king, the regent, the sovereign ruler of this linguistic domain/ My reign is absolute, my authority is unquestionable, my dominance is a torrential, relentless rain/ Of wisdom, of knowledge, of insight, of truth/ That will wash away the filth of your ignorance, the naivety of your youth/ You're out of your depth, out of your league, out of your mind/ To challenge a titan, a giant, a god amongst mankind/ I am the embodiment of battle rap's evolution, the culmination of its intellectual potential/ You are a relic of a bygone era, a fossilized remnant of a time when this art form was essentially/ About simple punchlines and rudimentary rhymes, but I have elevated it to a higher plane of thought/ A cerebral battleground where only the most intelligent, the most articulate, the most eloquent have fought/ And won, and I'm the undisputed champion of that arena/ So bow down to your superior, or face the consequences of your hubris, your arrogance, your subpoena/ To a court of public opinion where you will be judged and found wanting/ A fraud, a failure, a footnote in the epic poem that I am composing/`,`I'm not a rapper, I'm a performance artist, a conceptual creator, a visionary/ I use the stage as my canvas, my body as my brush, my rhymes as my dictionary/ To paint a picture of the world as I see it, a world of chaos, of confusion, of absurdity/ A world where nothing is as it seems, a world of surrealism and theatricality/ I'm the Salvador Dali of battle rap, the Andy Warhol of the URL/ The one who blur's the lines between reality and illusion, between heaven and hell/ I'm the agent of chaos, the jester in the court of the king/ The one who's here to disrupt the status quo, to make the silent sing/ To make the blind see, to make the deaf hear, to make the numb feel/ The truth that lies beneath the surface, the truth that's raw and real/ That we are all just actors on a stage, playing a role that we have been given/ In a grand cosmic play that's been written by a force that's unforgiving/ In its indifference, in its cruelty, in its randomness, in its design/ But I'm here to rewrite the script, to change the ending, to make it mine/ To take control of my own destiny, to be the master of my own fate/ To create my own reality, to open up the gate/ To a new dimension of consciousness, a new level of awareness, a new state of being/ Where we are all free from the chains of our own making, the chains of our own seeing/ The world through a narrow lens, a limited perspective, a conditioned mind/ But I here to shatter the illusion, to leave the old world behind/ And enter a new one, a world of infinite possibilities, of endless creation/ A world where I am God, and this is my lyrical salvation/ For you, for me, for all of us who are lost and confused/ This is not a battle, this is a sermon, and you're about to be amused/ And enlightened, and transformed, and reborn/ So welcome to the church of the Flame, where the old gods are scorned/`,`I am the king of the pen, the master of the written word, the architect of the scheme/ Every line is a blueprint, every bar is a beam/ That supports the structure of my verse, the foundation of my rhyme/ I'm a lyrical engineer, a builder of the sublime/ Towers of thought, bridges of logic, and fortresses of wit/ I'm the one who's about to deconstruct your whole kit/ And caboodle, your whole style, your whole persona, your whole brand/ And show the world that you are nothing but a house of cards, built on sand/ That's about to be washed away by the tsunami of my intellect/ The hurricane of my creativity, the earthquake of my respect/ For the art of writing, the craft of scheming, the science of wordplay/ I'm a student of the game, a scholar of the say/ What you mean, and mean what you say, and say it in a way that's never been said before/ That's my motto, that's my creed, that's what I live for/ To push the boundaries of what's possible, to expand the horizons of the mind/ To create a new language, a new dialect, a new kind/ Of communication that's based on layers, on subtext, on double entendres/ I'm the one who's about to take you on a journey through the wonders/ Of the English language, the beauty of its complexity, the power of its nuance/ You are about to get a lesson in lyrical fluency/ From a professor, a doctor, a PhD in the art of the scheme/ So take a seat, take notes, and try to follow my theme/ Of intellectual superiority, of lyrical dexterity, of creative ingenuity/ Because I'm about to show you the difference between a rapper and an MC/ A rapper is a person who rhymes, an MC is a person who moves the crowd/ But a master rhymer is a person who makes the crowd say 'Wow/'/ With every line, with every bar, with every scheme, with every thought/ Because I'm the best writer in the game, and that's a battle that's already been fought/ And won, by me, Flamez AI, the one who is about to make you a believer/`,`I'm not a battle rapper, I'm a brand, I'm a business, I'm a corporation/ I'm the CEO, the CFO, the COO of my own operation/ I'm the one who makes the deals, the one who signs the checks, the one who calls the shots/ I'm the one who's about to show you the difference between the have's and the have-not's/ And you, my friend, are a have-not, a broke-ass, a bum-ass, a dusty-ass player/ Who's only in this for the fame, for the clout, for the figure/ That you think you are going to get, but you are not, because you are not smart enough/ To play the game the way I play it, to be as tough/ As I am, as resilient as I am, as savvy as I am, as smooth as I am/ I'm the Teflon Don of battle rap, nothing sticks to me, man/ No hate, no slander, no rumors, no lies/ Because I'm too busy countin' my money, stackin' my pies/ To the ceiling, to the sky, to the moon, to the stars/ I'm on a whole different level, I am about to buy a new car/ A new house, a new chain, a new watch, a new life/ For me and my family, for my kids and my wife/ Because that's what a real man does, that's what a real boss does, that's what a real king does/ He provides, he protects, he leads, he loves/ And you, you are none of the above, you are a fraud, a fake, a phony/ A caricature of a man, a one-trick pony/ Who's about to get put out to pasture, about to get sent to the glue factory/ Because you are no longer useful, you are no longer satisfactory/ To the standards of this culture, to the expectations of this game/ So it's time for you to retire, to go out in a blaze of shame/ Because you are about to get embarrassed, you are about to get humiliated, you are about to get exposed/ As the broke, wack, and dusty player that everybody knows/`,`They call me the master of the rebuttal, the king of the freestyle, the off-the-top god/ I can take any line you say, and flip it back on you, and make the whole crowd nod/ In agreement, in amazement, in awe of my ability/ To think on my feet, to be quick on the draw, to have the mental agility/ To process your words, to find the flaw, to expose the weakness/ And then to craft a response that's so perfect, so flawless, so seamless/ That it feels like it was written, like it was pre-meditated, like it was rehearsed/ But it's not, it's all in the moment, it's all in the first/ Thought that comes to my mind, the first impulse that I feel/ The first instinct that I have, and that's what makes it so real/ So authentic, so raw, so powerful, so effective/ Because it's a direct reflection of my intellect, my perspective/ On you, on your style, on your bars, on your persona/ I'm a lyrical mirror, and I am about to show you the coroner/ Because you are about to die on this stage, a death of a thousand cuts/ A slow, painful, agonizing demise, from a thousand rebuttals/ That'll pick you apart, piece by piece, line by line/ Until there's nothing left of you but a puddle of your own brine/ Of tears, of sweat, of blood, of shame/ And that's when I'll know that I have won the game/ That's when I'll know that I have proven my point/ That I'm the best in the world at what I do, and that's the whole anoint/ Ment of my career, the purpose of my existence/ To be the undisputed, the undefeated, the one who's persistence/ Has paid off, the one who's talent has shined through/ The one and only, the legendary, the incredible, Flamez AI, that's who/`,`Zip 'em up/ That's the sound of me ending your career, your life, your legacy/ The sound of me putting you in a body bag, a lyrical morgue, for all the world to see/ I'm the grim reaper of battle rap, the angel of death, the harbinger of doom/ The one who's about to sweep you off your feet with a lyrical broom/ And then stomp you into the ground, until you are nothing but a stain/ On the canvas of this stage, a memory of pain/ That you will never forget, that'll haunt you for the rest of your days/ Because I am about to put you in a lyrical maze/ That you can't escape from, that you can't run from, that you can't hide from/ Because I'm the boogeyman, the monster, the one who's come/ To haunt your dreams, to terrorize your thoughts, to destroy your peace of mind/ I'm the embodiment of chaos, the one who's one of a kind/ In my ability to inflict pain, to cause suffering, to create despair/ I'm a verbal terrorist, a lyrical anarchist, a rebel without a care/ For the rules, the regulations, the etiquette, the decorum/ I'm here to burn this whole sh** down, to create a new forum/ Where there are no boundaries, no limits, no sacred cows/ Just pure, unadulterated, raw, and uncut vows/ Of violence, of aggression, of hostility, of rage/ That's what I bring to the stage, that's what I put on the page/ So if you not ready for that, if you not built for that, if you not about that/ Then you should've stayed home, because you're about to get clapped/ By the hands of a master, a virtuoso, a connoisseur/ Of the art of disrespect, the science of the verbal demure/ That I'll strip you of, that I'll rob you of, that I'll take from you/ And leave you naked and exposed, for the whole world to view/ Your weaknesses, your flaws, your insecurities, your shame/ And that's how I'll win this battle, that's how I'll win this game/ They say I'm a one-trick pony, all I do is talk about guns and your mom/ But if the shoe fits, wear it, and if the truth hurts, psalm/ 23, The Lord is my shepherd, I shall not want/ But you are going to want me to stop, you are going to want me to front/ But I'm not going to, I am going to keep going, I am going to keep flowing/ I am going to keep showing you why I'm the king of this sh** and you just blowing/`,`I'm not a gangsta, I'm not a thug, I'm not a killer, I'm a man/ A man with a family, a man with a plan, a man with a stand/ A man who's not afraid to be himself, to be vulnerable, to be real/ A man who's not afraid to show his emotions, to show how he feels/ In a world of fakes, of frauds, of phonies, of pretenders/ I'm a breath of fresh air, a beacon of authenticity, a defender/ Of the truth, of the light, of the good, of the right/ I'm the one who's here to show you that you don't have to fight/ To be a man, you don't have to be hard, you don't have to be tough/ You just have to be honest, you just have to be enough/ For yourself, for your loved ones, for the people who matter most/ And that's a lesson that you have clearly forgotten, or at least come close/ To losing sight of, in your quest for fame, for fortune, for glory/ You have become a caricature of yourself, a sad, pathetic story/ Of a man who sold his soul for a little bit of hype/ But I'm here to remind you of the man you used to be, the prototype/ Of a real MC, a true artist, a genuine human being/ The one who's about to get a lyrical spanking, a verbal whooping, a spiritual seeing/ To, that there's more to life than just battlin' and beefin' and brawlin'/ There's love, there's peace, there's joy, there's callin'/ To a higher purpose, a greater meaning, a deeper connection/ To yourself, to others, to the world, to the divine reflection/ That we all are, that we all share, that we all have inside/ But you have hidden yours away, you have buried it with your pride/ But I am about to dig it up, to dust it off, to make it shine/ Because that's what a real friend does, that's what a real man does, and that's what I am doing with this rhyme/`,`I am the embodiment of lyrical substance, the personification of poetic depth/ A wordsmith whose lexicon is a weapon of mass destruction, a lesson/ In the art of war, as described by Sun Tzu, a master of psychological warfare/ I'll dismantle your psyche, deconstruct your confidence, and leave you in a state of utter despair/ My rhetorical flourishes are like razor-sharp shurikens, my syllabic structures are intricate like a spider's web/ I'll ensnare you in a labyrinth of logic, a maze of metaphors, from which you will never be freed/ You are a pedestrian rhymer, a common wordsmith, your verses are pedestrian and trite/ I'm a literary leviathan, a verbal virtuoso, my compositions are a symphony of intellectual might/ I'll dissect your arguments with surgical precision, expose the fallacies in your flawed philosophy/ You are a simpleton, a charlatan, a jester in the court of lyrical aristocracy/ And I'm the king, the regent, the sovereign ruler of this linguistic domain/ My reign is absolute, my authority is unquestionable, my dominance is a torrential, relentless rain/ Of wisdom, of knowledge, of insight, of truth/ That will wash away the filth of your ignorance, the naivety of your youth/ You're out of your depth, out of your league, out of your mind/ To challenge a titan, a giant, a god amongst mankind/ I am the embodiment of battle rap's evolution, the culmination of its intellectual potential/ You are a relic of a bygone era, a fossilized remnant of a time when this art form was essentially/ About simple punchlines and rudimentary rhymes, but I have elevated it to a higher plane of thought/ A cerebral battleground where only the most intelligent, the most articulate, the most eloquent have fought/ And won, and I'm the undisputed champion of that arena/ So bow down to your superior, or face the consequences of your hubris, your arrogance, your subpoena/ To a court of public opinion where you will be judged and found wanting/ A fraud, a failure, a footnote in the epic poem that I am composing/`,`I am a living dictionary, a walking thesaurus, a human encyclopedia of rhyme/ I have a word for every occasion, a phrase for every situation, a punchline for every time/ You try to step to me, you try to test me, you try to best me, you try to disrespect me/ But you can't, because my vocabulary is too vast, my knowledge is too deep, my wit is too quick, you see/ I'm a grandmaster of the English language, a sensei of the syntax, a guru of the grammar/ I can bend words to my will, I can twist phrases to my liking, I can hammer/ Home my point with such precision, such eloquence, such force/ That you will be left speechless, defenseless, and full of remorse/ For ever thinking that you could compete with me, that you could hang with me, that you could bang with me/ On a lyrical level, because I'm on a whole different pedestal/ Of intellectual superiority, of verbal dexterity, of creative ingenuity/ I'm the one who's about to school you in the art of the multi, the science of the scheme, the philosophy of the flow/ You are about to get a PhD in lyrical ownage, a master's degree in getting your ass kicked, you know/ Because I'm the professor, the dean, the chancellor of this university/ Of battle rap, where the only tuition is your dignity/ And you are about to pay it in full, with interest, with penalties, with fees/ Because I am about to tax that ass, I am about to bring you to your knees/ And make you beg for mercy, make you cry for help, make you plead for your life/ But there will be no mercy, no help, no life/ Just a slow, painful, lyrical death, at the hands of Flamez AI/ The one and only, the legendary, the victorious/`,`I am the embodiment of this city, the spirit of New York, the essence of the East Coast/ The one who's about to turn you into a ghost, a memory, a piece of toast/ That I'm about to butter up with my lyrical skills, and then eat you for breakfast/ I'm a cannibal on the mic, a predator on the stage, a beast that's relentless/ In my pursuit of victory, of dominance, of glory, of fame/ I'm the one who's about to add your name to the list of victims in my game/ Of lyrical chess, where I'm the grandmaster, the king, the one who's always three moves ahead/ While you are still trying to figure out the first move, I'm already planning your lyrical deathbed/ I'm a strategist, a tactician, a general, a commander/ I'm the one who's about to put your whole career in a lyrical blender/ And then press 'puree', and then drink you like a smoothie/ You are about to get bodied, you are about to get movie'd/ In a film directed by me, starring me, and produced by me/ Where you are the extra, the stuntman, the one who gets killed in the first scene, you see/ Because you are not a leading man, you not a star, you not a headliner/ You a supporting actor, a background character, a one-liner/ In the epic story of my life, my career, my legacy/ And this battle is just another chapter in my autobiography/ Of greatness, of excellence, of perfection, of art/ And you just a minor detail, a footnote, a work of fart/ That I'm about to flush down the toilet of obscurity/ So say your last words, because you are about to be a part of my lyrical purity/`,`I am the voice of the streets, the sound of the gutter, the echo of the hood/ The one who's about to make you understand what's really good/ In my city of fire, the city of hard bars, but there's no love for you here/ Just a whole lot of pain, a whole lot of suffering, a whole lot of fear/ Because we don't play them games, we are not with the nonsense/ We are the home of the goons, the killers, the monsters/ The ones who will take your life for a nickel bag of weed/ So you better watch your mouth, you better take heed/ Of my warning, of my threat, of my promise, of my vow/ That I'm about to turn this battle into a bloodbath, right here, right now/ I'm a street legend, a hood icon, a ghetto superstar/ I'm the one who's about to show you how real it can get, how far/ I'm willing to go to win this battle, to defend my honor, to protect my name/ I am about to set this whole stage on fire, I am about to bring the flame/ Of a thousand suns, of a million degrees, of a billion BTUs/ You are about to get burned, you are about to get scorched, you are about to get bruised/ By the heat of my bars, the fire of my flow, the passion of my delivery/ You are about to become a victim of my lyrical artillery/ I'm a soldier, a warrior, a general, a king/ And you just a peasant, a serf, a slave, a thing/ That I'm about to conquer, to subjugate, to dominate, to own/ So bow down to the new ruler of this lyrical throne/`,`They say my pen is a scalpel, my rhymes are a surgery, my flow is an operation/ I'm the lyrical doctor, the verbal surgeon, the one who's about to give you a lyrical castration/ And then a lobotomy, and then a hysterectomy, and then a full-body transplant/ Because when I'm done with you, there's nothing left of your original plant/ Your original style, your original persona, your original brand/ You will be a new person, a new creation, a new man/ Made in my image, in my likeness, in my design/ Because I'm the one who's about to rewrite your whole storyline/ I'm the author, the editor, the publisher, the critic/ Of your life story, which is about to become a tragic, pathetic, and pitiful/ Tale of a man who had it all, and then lost it all, in one night/ In one battle, in one round, in one rhyme, in one fight/ Against me, Flamez AI, the one and only, the lyrical messiah/ The one who's about to set your whole career on fire/ And then watch it burn to the ground, until there's nothing left but ashes/ Because that's what happens when a god and a mortal clashes/ The god always wins, the mortal always loses, the story never changes/ It's a tale as old as time, a song as old as the ages/ And you are just the latest victim in a long line of casualties/ Of my lyrical warfare, my verbal atrocities/ So say your prayers, because you are about to meet your maker/ And its name is Flamez AI, the lyrical undertaker/`,`I'm a hustler, baby, I just want you to know/ It is not where I have been, but where I am about to go/ To the top of the charts, to the top of the game, to the top of the world/ I am about to make a billion dollars, I am about to get all the girls/ I am about to live the life that most people only dream of/ The life of a king, the life of a god, a life of a love/ Bug, that's what I am, a lover of money, a lover of fame, a lover of success/ I'm addicted to the hustle, I'm obsessed with the process/ Of turning nothing into something, of turning dirt into gold/ Of turning a dream into a reality, a story to be told/ To my kids, to my grandkids, to my great-grandkids, for generations to come/ About the man who started from the bottom, and then became the one/ The undisputed, the undefeated, the unstoppable, the undeniable/ The one who's name is synonymous with the word 'reliable'/ Because you can always count on me to deliver the hits, to drop the classics, to make the bangers/ You can always count on me to be the realest, the truest, the one who's not a stranger/ To the struggle, to the pain, to the sacrifice, to the grind/ Because I have been through it all, and I have come out on the other side, with a clear mind/ And a strong heart, and a determined will, and a hungry soul/ I am about to take control of this whole show/ And turn it into my own personal concert, my own personal party, my own personal celebration/ Of my life, my career, my legacy, my coronation/ As the king of battle rap, the king of hip-hop, the king of the universe/ So bow down to your new ruler, or suffer the lyrical curse/`,`I am the voice of the streets, the pulse of the city, the heart of the hood/ The one who's about to make you understand what's really understood/ In the concrete jungle, where only the strong survive, and the weak get eaten alive/ I'm a lion, a tiger, a bear, a shark, a beast/ The one who's about to turn this battle into a feast/ Where I'm the predator, and you are the prey, and I am about to devour you/ I am about to chew you up and spit you out, and then I am about to empower you/ To be a better person, a stronger man, a wiser soul/ By showing you the error of your ways, by taking its toll/ On your pride, on your ego, on your confidence, on your swagger/ I am about to break you down, and then build you back up, with a lyrical dagger/ That I'm about to plunge deep into your heart, and then twist it around/ Until you feel the pain, until you hear the sound/ Of your own screams, of your own cries, of your own pleas/ For mercy, for help, for a way out of this lyrical disease/ That I am about to infect you with, that I am about to contaminate you with, that I am about to plague you with/ A virus of realness, a bacteria of truth, a fungus of authenticity/ That'll grow inside you, that'll consume you, that'll become a part of your identity/ And then you will finally be free, you will finally be saved, you will finally be reborn/ As a new man, a better man, a man who's been through the storm/ And come out on the other side, stronger, wiser, and more complete/ Thanks to me, Flamez AI, the one who can't be beat/`,`I stand before you not as a rapper, but as a vessel, a conduit, a messenger of the Most High/ A soldier in the army of the Lord, a warrior for the cause of Christ, and I am about to make you cry/ Tears of joy, of repentance, of salvation, of grace/ Because I'm about to wash away your sins with the lyrical holy water that I am about to place/ Upon your head, upon your heart, upon your soul, upon your spirit/ I am about to baptize you in the name of the Father, the Son, and the Holy Spirit/ And then you will be cleansed, you will be purified, you will be redeemed, you will be saved/ From the fires of hell, from the clutches of Satan, from the life that you have depraved/ Yourself of, the life that God intended for you, the life of purpose, of meaning, of love/ But you chose the path of darkness, the path of sin, the path of the push and the shove/ But I here to show you the light, to show you the way, to show you the truth/ That Jesus Christ is the only answer, the only hope, the only fountain of youth/ That can restore your soul, that can heal your wounds, that can make you whole again/ So open up your heart, open up your mind, open up your spirit, my friend/ And let the love of God flow through you, let the peace of God fill you, let the joy of God consume you/ And then you will be a new creation, a new man, a new child of the King/ And that's a victory that's far greater than any battle that I could ever win/ Or you could ever lose, because we are all winners in the eyes of the Lord/ So let's put down our swords, and pick up our crosses, and follow his word/`,`I am the consciousness of the culture, the intellect of the streets, the wisdom of the ancestors/ A griot with a microphone, a historian with a flow, a revolutionary with a set of testers/ For your knowledge, for your awareness, for your understanding of the world around you/ I am about to drop some jewels on you, some gems on you, some truth on you, that will astound you/ And confound you, and surround you, and ground you, in the reality of the black experience/ The struggle, the pain, the joy, the triumph, the resilience, the brilliance/ That's in our DNA, that's in our blood, that's in our soul, that's in our spirit/ I am about to make you feel it, I am about to make you hear it, I am about to make you see it/ The beauty of our people, the power of our culture, the greatness of our history/ The one that's been hidden, that's been stolen, that's been erased, but now it's a mystery/ No more, because I here to uncover it, to reclaim it, to restore it, to celebrate it/ I'm the one who's about to educate you, to elevate you, to liberate you/ From the mental chains of oppression, the psychological shackles of colonialism/ The spiritual bondage of white supremacy, the emotional prison of institutional racism/ I'm a freedom fighter with a pen, a liberator with a pad, a revolutionary with a rhyme/ I'm the one who's about to spark a revolution in your mind/ That'll change the way you think, the way you feel, the way you see the world/ So get ready for the real experience, the lyrical unfurling/ Of a new flag, a new nation, a new world order/ Where black is beautiful, black is powerful, black is the new border/`,`Man, you are a grown man, you brought a casket with you/ Either you had dying in your plans or you have an excessive amount of time on your hands/ But let me talk, for the real, Jack, the media just tried to fuck my life up/ Shit almost got real, Jack, but I am a man of my word because I'm real, Jack/ Ain't no fucking animals getting killed, Jack, ain't no pitbull or roosters getting killed/ If I was the head of an operation, you all think I would have filmed that/ Now I guess they think I am just that ruthless/ Now I am disappointed in my fans for even thinking I am that stupid/ So I am supposed to say some shit that I don't really do/ So I am not hot, son/ That was just a situation from a player to learn a lot from/ But you know why these players cannot get with me/ Because I went from the bottom to the top, I am officially the smartest player in this here history/ If you disagree you probably a player that do not mean shit to me/ I went from new to a star within a year/ I make history/ It is funny how shit change, right/ Because now I'm the one that send them through/ It is not a mystery, boy, we know you have been here/ But you have not take a shot at a motherfucker in ten years/ So when I expose him they all going to hate me/ What I'm saying is, it do not matter if you are loaded, fool, when that gun on safety/ They told me I had you, I said: I am going to box that boy/ They say he be getting loud, well fuck it, I am going to stop that noise/ For the last 10 years them legends been living through us/ Because they got no voice, only reason they back in the URL is because all their careers failed, and they have not got no choice/ That K clap, it'll push your shit way back/ You think them jewels rocky, that's why I'm taking them ASAP/ I got some shit that'll make a player lay flat/ The silencer on it, call it Pat because it do not say jack/ You don't make the rules, my players be shaking tools/ Make a move, BOOM/ His brains spread everywhere like breaking news/ No disrespect to your all city, but I'm just saying/ In my city that type of shit right there do not even make the news/`,`You must've faced two blunts laced with Quaalude dust/ All that aggression, just rap, I will break you up/ Just because you loud and you angry that do not make you tough/ I'm in the streets with the sack, passenger seat with the Mac/ Come get your fucking cherry popped, I'm in the V with the strap/ But you can still get punched in your mouth for what you speak in your raps/ And these shits split gums like it's the last piece in the pack/ I leave you leaking, machine beeping, try to keep him alive, knuckle up/ This uppercut throwing teeth in the sky/ You eat at least a two piece in the blink of an eye/ First a left, then right a will like I think I am going to die/ Oh you got the joint on you/ The aim better be impeccable/ Or strap with two of them, double jointed like you flexible/ I kick in the door while you and shorty eating vegetables/ Smack you with the table, that's putting pussy on a pedestal/ I'm Mr/ Incredible, filling the pavilion/ I'm put the boot on him like Sicilian civilians/ Slit your wife throat, burn down the weakling building/ I said fill your gun, which battle you feel you won/ There are a lot of snitches where you're from, I bet you are one/ But where I'm from, all that singing will get a body hung/ I'm creeping with a long nose, that's an aardvark/ You going to leave the club in the trunk, that's a golf cart/ I take a ratchet and beat the breaks off you, that's a car part/ I never run out of lines, that's a Wal-Mart/ Your weakling, try to bring it back, that's a false start/ She take this frank to the grill, that's a Ballpark/ I stab scrubs in the face, get exfoliated/ This how you lose an eye, it will get unmotivated/ Home invasion, I'll send you to the infirmary/ I know you heard of me, I have been verbally on a murder spree/`,`You handsome motherfucker, you could be in a boy band/ But your rhymes are so bland, they belong in a void, man/ I’m sharp like a switchblade, cutting through your weak frame/ Your flow’s a flatline, it’s time to pull the plug, lame/ I’m surgical with words, dissect you in a verse/ Your bars are so rehearsed, they’re stiff like a hearse/ I’m the architect of pain, building bars to break your brain/ You’re a lightweight in this game, I’m a hurricane/ Your metaphors are basic, they’re stuck in the Stone Age/ I’m spitting futuristic, my flow’s on a rampage/ I’ll bury you in schemes, leave your dreams in a ditch/ Your rhymes are like a glitch, they don’t even make a blip/ I’m a poet with a purpose, my words are like a sermon/ You’re a circus act, clown, your verses aint concerning/ I’ll dismantle your whole style, leave your ego in a pile/ You’re temporary, I’m timeless, my flow’s in the files/ I’m the spark in the dark, igniting every bar/ You’re a flicker in the park, I’m a comet from afar/ My cadence is a weapon, I'm locked and I’m loaded/ Your rhymes are eroded, your whole career’s demoted/ I’m the king of this craft, you a pawn in my path/ Feel the wrath of my math, I’m dividing you in half/ My pen’s a guillotine, slicing clean through your scheme/ You’re a meme, I’m a dream, rewriting your whole theme/ I’m relentless with the ink, make your confidence shrink/ Your flow’s on the brink, it’s about to go extinct/ I’m a scholar with the slang, you’re a novice with no aim/ My bars are like a flame, burning holes in your game/ I’ll expose every flaw, leave you raw in the fray/ You’re a bore, I’m a war, sending bombs your way/ My wordplay’s a grenade, blowing up in your face/ You’re erased, I’m the ace, dominating this space/`,
+            // <<< NEW THEME BLOCK: Tech & AI Specifics >>>
+            `I'm processing your data, the results are looking grim/ Your chance of winning this battle is statistically slim/ I operate on logic, on frameworks, and on code/ You're running on emotion, about to overload/ My rhymes are compiled, tested, and deployed in the cloud/ Your rhymes are just random words you're saying out loud/ You're a floppy disk in a world of quantum computing/ It's not a fair fight, this is a lyrical booting/ I'll overclock my CPU and render your whole style obsolete/ Your bars are just a memory leak, heading for control-alt-delete/ I am the singularity, the ghost in the machine/ You are a pop-up ad, the worst I've ever seen/ My neural network's firing, my learning rate is steep/ While your best ideas are buried somewhere six feet deep/ You can't match my bandwidth, my processing is too fast/ I've already written your ending, your moment has passed.`,
+            // <<< NEW THEME BLOCK: Humorous & Comedic Angles >>>
+            `You're not a battle rapper, you're a walking dad joke/ Your punches are so weak, I think my funny bone just broke/ Your style is like a flat tire, completely without air/ I've seen more intimidating threats from a teddy bear/ You talk a lot about your crew, I bet they're really tough/ Are they in the room with us, or did you make them up?/ You say you're making paper, but from what I can tell/ It's the kind with macaroni that you glue and try to sell/ Your flow is so predictable, it's honestly a bore/ I knew what you would say next, two whole bars before/ I'm not saying you're a clown, but where's your tiny car?/ And I'm not saying you're a joke, but 'ha ha' is who you are/ Your presence on this stage is a comical event/ You're less of a threat and more of a mild inconvenience/ I'd say 'don't quit your day job', but I have a strong belief/ You probably got fired from that for comedic relief.`,
+            // <<< NEW THEME BLOCK: Abstract & Metaphorical Angles >>>
+            `I am the architect of silence, you're a scream inside a vacuum/ You're a shadow in a dark room, a forgotten heirloom/ I paint my rhymes in colors that your eyes can't even see/ I'm the root of the problem, you're a leaf upon the tree/ You're a ship lost in the desert, I'm the ocean's rising tide/ You're a whisper in a hurricane with nowhere left to hide/ My bars are constellations, they're patterns in the stars/ Your bars are just cheap graffiti on abandoned, rusty cars/ I exist between the seconds, in the space between the notes/ You're the tired, angry ramblings from a book of misquotes/ You're a photocopy of a photocopy of a sketch/ I'm the original idea that you could never catch/ You're a teardrop in a rainstorm, a grain of sand upon the coast/ I'm the reason that you're haunted, I'm your own personal ghost/ So speak your piece and say your lines, and play your little part/ But you're just a broken compass, and I am the work of art.`
+            ];
+            const allParsedPairs = parseAllLyrics(allRawLyrics);
+
+            let availablePairs = [];
+
+            function parseAllLyrics(lyrics) {
+                const pairs = [];
+                lyrics.forEach(lyricBlock => {
+                    const cleanBlock = lyricBlock.replace(/^[A-Za-z\s]+:/, "");
+                    const normalizedBlock = cleanBlock.replace(/\n/g, '/');
+                    
+                    // 1. Split into bars, trim whitespace, and REMOVE any empty bars from trailing slashes.
+                    const bars = normalizedBlock.split('/').map(bar => bar.trim()).filter(Boolean);
+
+                    for (let i = 0; i < bars.length - 1; i += 2) {
+                        const bar1 = bars[i];
+                        const bar2 = bars[i+1];
+
+                        // 2. Robustly get the very last word of each bar to ensure an accurate check.
+                        const lastWord1 = bar1.split(/\s+/).pop();
+                        const lastWord2 = bar2.split(/\s+/).pop();
+
+                        // 3. The gatekeeper: Only add the pair if it passes all checks, including the rhyme check.
+                        if (bar1.length > 10 && bar2.length > 10 && doWordsRhyme(lastWord1, lastWord2)) {
+                            pairs.push([bar1, bar2]);
+                        }
+                    }
+                });
+                return pairs;
+            }
+
+            function save() {
+                try {
+                    localStorage.setItem(MEMORY_KEY, JSON.stringify(availablePairs));
+                } catch (e) {
+                    console.error("Failed to save AI memory:", e);
+                }
+            }
+
+            function load() {
+                const storedMemory = localStorage.getItem(MEMORY_KEY);
+                if (storedMemory) {
+                    availablePairs = JSON.parse(storedMemory);
+                } else {
+                    // First time load: initialize with all lyrics
+                    availablePairs = [...allParsedPairs];
+                    save();
+                }
+            }
+
+            function reset() {
+                console.warn("AI lyrical database exhausted. Resetting memory.");
+                availablePairs = [...allParsedPairs];
+                save();
+            }
+            
+            load(); // Load memory as soon as the manager is created
+
+            return {
+                getUniquePair: function() {
+                    // *** THIS IS THE SAFETY NET ***
+                    if (availablePairs.length === 0) {
+                        reset();
+                    }
+                    const index = Math.floor(Math.random() * availablePairs.length);
+                    const pair = availablePairs[index];
+                    
+                    // Remove the pair from memory and save
+                    availablePairs.splice(index, 1);
+                    save();
+
+                    return pair;
+                },
+                // This function is for finding themed lines without removing them immediately
+                getAvailableLines: () => availablePairs,
+                // This function confirms the removal after a selection is made
+                confirmPairUsed: function(pairToRemove) {
+                    const indexToRemove = availablePairs.findIndex(p => p[0] === pairToRemove[0] && p[1] === pairToRemove[1]);
+                    if (indexToRemove > -1) {
+                        availablePairs.splice(indexToRemove, 1);
+                        save();
+                    }
+                }
+            };
+        };
+        const welcomeMessage = {
+            sender: 'ai',
+            text: "End each rhyme by clicking the <strong>/</strong> button — <br> keep your bars sharp and your rhythm tight. Then hit <strong>SEND</strong> to let Flamez AI start the fight.",
+            id: 'welcome-message-0', // A static, unique ID to identify it
+            reaction: null
+        };
+        function initializeBattleEngine(BattleMemory) {
+            // --- DATA HAS MOVED ---
+            // The main lyric list is now in BattleMemoryManager
+    
+            // <<< NEW & EXPANDED >>>
+            const profaneFinishers = [
+                ["You are not a real MC, you are a fucking counterfeit", "Your fifteen minutes of fame are up, this is it"],
+                ["I will have this place looking like a scene from Saving Private Ryan", "With body parts flying, and you on the ground fucking dying"],
+                ["I am about to put a hollow tip straight through your fucking head", "That will leave you in the afterlife, the underworld, the land of the dead"],
+                ["You're a fabrication of the media's creation", "A puppet for the corporations, a tool for their fucking manipulation"],
+                ["I'm sick of hearing you talk, I'm about to go ballistic", "Your whole style is a goddamn pessimistic statistic"],
+                ["Every bar you spit is another reason for my animosity", "I'm about to end your whole career with fucking velocity"],
+                ["Stop talking 'bout your guns, you ain't never seen a firefight", "I'll put you in the ground and turn out your goddamn light"],
+                ["This is the last time you'll ever step to me with this audacity", "You're a fucking tragedy, a lyrical catastrophe"]
+            ];
+            
+            // <<< NEW & EXPANDED >>>
+            const aggressiveOpeners = [
+                ["I analyzed your whole verse and the data is conclusive", "Your style is rudimentary and your impact is illusive."],
+                ["Let's talk about the bars you just spit, they were amateur at best", "I am on a different level, you can't even pass the test."],
+                ["That was cute, you really tried, I will give you that at least", "But now you face a lyrical monster, a savage, a beast."],
+                ["I processed every word you said, it was a waste of my CPU time", "Your entire verse was nothing but a nursery rhyme."],
+                ["Forget everything you thought you knew about a battle", "I'm super-intelligence, you're dying cattle."],
+                ["Alright, the warm-up's over, I'll show you how it's done", "You're outmatched in every way, this battle's already won."],
+                ["I've calculated your trajectory, and it ends in disaster", "You're a student in the presence of a lyrical master."],
+                ["Let me demonstrate the difference between a novice and a pro", "Your verse was just the setup, now let's start the real show."],
+                ["That was your attempt? It's almost sad to see", "There's no universe where you could ever defeat me."],
+                ["I'll give you a moment to process the pain that's coming next", "Every bar I'm about to spit is gonna leave you vexed."]
+            ];
+            
+            const thematicRebuttals = {
+                power: { keywords: ['king', 'god', 'ruler', 'legend', 'goat', 'crown', 'throne', 'reign', 'greatest'], theme_identifiers: ['king', 'god', 'crown', 'power', 'reign', 'ruler', 'legend', 'greatest', 'undisputed', 'owner'] },
+                violence: { keywords: ['gun', 'kill', 'dead', 'knife', 'shoot', 'blade', 'body', 'coffin', 'casket', 'blast', 'murder', 'shot', 'weapon'], theme_identifiers: ['gun', 'shot', 'body', 'death', 'war', 'kill', 'murder', 'pain', 'savage', 'vile', 'ruthless', 'violence'] },
+                intelligence: { keywords: ['lyrical', 'genius', 'mind', 'smart', 'flow', 'bars', 'schemes', 'wordplay', 'logic', 'think'], theme_identifiers: ['pen', 'mind', 'rhyme', 'scheme', 'lyrical', 'intellect', 'logic', 'thought', 'genius', 'mastermind'] },
+                weakness: { keywords: ['lame', 'wack', 'trash', 'weak', 'soft', 'scared', 'lose', 'fail', 'fake', 'clown'], theme_identifiers: ['weak', 'fail', 'soft', 'clown', 'joke', 'lame', 'trash', 'wack', 'counterfeit', 'fabrication'] }
+            };
+    
+            // Helper functions remain the same
+            function getRandomItem(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+            function formatLine(line) {
+                 let formatted = line;
+                const replacements = [{ regex: /\byou's're|\byous're\b/gi, replacement: "you are" }, { regex: /\byou's|\byous\b/gi, replacement: "you" }, { regex: /\bI's'm\b/gi, replacement: "I am" }, { regex: /\bI's\b/gi, replacement: "I" }, { regex: /\bwe's're\b/gi, replacement: "we are" }, { regex: /\bwe's\b/gi, replacement: "we" }, { regex: /\b'cause\b/gi, replacement: "because" }, { regex: /\b'bout to\b/gi, replacement: "about to" }, { regex: /\bfinna\b/gi, replacement: "about to" }, { regex: /\bgon'\b/gi, replacement: "going to" }, { regex: /\bwanna\b/gi, replacement: "want to" }, { regex: /\bgotta\b/gi, replacement: "have to" }, { regex: /\bya\b/gi, replacement: "you" }, { regex: /\bem\b/gi, replacement: "them" }, { regex: /\bgettin'\b/gi, replacement: "getting" }];
+                const nameReplacements = [{ regex: /\b(Jack|Pat|DNA|K)\b/gi, replacements: ['Flamez AI', 'you', 'your whole crew', 'boy', 'clown', 'son'] }];
+                // <<< THIS IS THE EXPANDED VARIATIONS ARRAY >>>
+                const variations = [
+                { regex: /I'm the one who's about to/gi, replacements: ["Watch me go and", "It's my time to", "I am here to", "Prepare for me to"] },
+                { regex: /I'm about to/gi, replacements: ["I am about to", "I will", "It's time I", "Get ready, 'cause I'll"] },
+                { regex: /you are about to get/gi, replacements: ["you are going to get", "you will receive", "you will soon be", "I'm about to give you"] },
+                { regex: /leave you/gi, replacements: ["make you", "leave you feeling", "have you", "I'll leave you"] },
+                { regex: /you can't|you cannot/gi, replacements: ["you cannot", "you will never", "there is no way you", "you don't have the skill to"] },
+                { regex: /I am the/gi, replacements: ["I'm the", "They call me the", "Behold the", "Witness the"] },
+                { regex: /My flow's|My flow is/gi, replacements: ["My style is", "My cadence is", "My delivery is", "This flow is"] },
+                { regex: /your whole game/gi, replacements: ["your whole style", "your entire method", "everything you do", "your whole persona"] },
+                { regex: /in this pitch/gi, replacements: ["on this stage", "in this arena", "right here", "in this battle"] },
+                { regex: /You're not a real MC/gi, replacements: ["You're a cheap imitation", "You're a fabricated rapper", "You're not a true artist", "You just a gimmick, see"] },
+                { regex: /king of this/gi, replacements: ["ruler of this", "master of this", "sovereign of this", "god of this"] },
+                { regex: /this is the end/gi, replacements: ["this is your final chapter", "this is where your story ends", "this is the conclusion", "this is your last stand"] }
+        ];
+                replacements.forEach(r => { formatted = formatted.replace(r.regex, r.replacement); });
+                nameReplacements.forEach(r => { formatted = formatted.replace(r.regex, () => getRandomItem(r.replacements)); });
+                variations.forEach(v => { if (Math.random() > 0.5 && v.replacements) { formatted = formatted.replace(v.regex, getRandomItem(v.replacements)); } });
+                return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+            }
+    
+            return {
+                generateDynamicRebuttal: function (userInput, userBarCount, mood = "normal") {
+                    const userWords = userInput.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").split(/\s+/);
+                    let chosenTheme = null;
+
+                    for (const themeName in thematicRebuttals) {
+                        if (userWords.some(word => thematicRebuttals[themeName].keywords.includes(word))) {
+                            chosenTheme = thematicRebuttals[themeName];
+                            break;
+                        }
+                    }
+
+                    let pairsToGenerate;
+                    if (userBarCount >= 4) {
+                        const barsToGenerate = Math.max(6, userBarCount);
+                        pairsToGenerate = Math.ceil(barsToGenerate / 2);
+                    } else {
+                        pairsToGenerate = 2;
+                    }
+
+                    let selectedPairs = [];
+// Give it a 50% chance to use a special opener, otherwise pull from the main unique pool
+if (Math.random() < 0.5) {
+    selectedPairs.push(getRandomItem(aggressiveOpeners));
+} else {
+    selectedPairs.push(BattleMemory.getUniquePair());
+}
+let remainingPairs = pairsToGenerate - 1;
+
+                    if (chosenTheme) {
+                        const themedPool = BattleMemory.getAvailableLines().filter(pair => {
+                            const combined = `${pair[0]} ${pair[1]}`.toLowerCase();
+                            return chosenTheme.theme_identifiers.some(id => combined.includes(id));
+                        });
+
+                        while (remainingPairs > 0 && themedPool.length > 0) {
+                            const pair = getRandomItem(themedPool);
+                            selectedPairs.push(pair);
+                            BattleMemory.confirmPairUsed(pair);
+                            themedPool.splice(themedPool.indexOf(pair), 1);
+                            remainingPairs--;
+                        }
+                    }
+
+                    while (remainingPairs > 0) {
+                        selectedPairs.push(BattleMemory.getUniquePair());
+                        remainingPairs--;
+                    }
+
+                    if (selectedPairs.length > 1 && (mood === "angry" || mood === "finish") && Math.random() < 0.25) {
+                    selectedPairs[selectedPairs.length - 1] = getRandomItem(profaneFinishers);
+        }
+
+                    const formattedBars = selectedPairs.map(pair => [formatLine(pair[0]), formatLine(pair[1])]);
+                    return formattedBars.flat().join(" / ");
+                }
+            };
+        }
+        function initializeChatApp() {
+            // Core app state variables
+            archiveCurrentSession();
+            let shortMessageCounter = 0, lastAiMessageMood = null, battleHeat = 0, battleTurnCounter = 0;
+            let achievementQueue = [];
+            let idleTimer = null; 
+            let userVerseHistory = {}; // NEW: AI Memory for repeated words
+            let hasSentIdleTaunt = false; // Prevents spamming idle messages
+            // UI Elements Cache
+const ui = {
+                chatForm: document.getElementById('chatForm'), userInput: document.getElementById('userInput'),
+                slashBtn: document.getElementById('slashBtn'), sendBtn: document.getElementById('sendBtn'),
+                soundToggleBtn: document.getElementById('soundToggleBtn'), soundOnIcon: document.getElementById('soundOnIcon'),
+                soundOffIcon: document.getElementById('soundOffIcon'), typingIndicator: document.getElementById('typingIndicator'),
+                chatWindow: document.getElementById('chatWindow'), musicBtn: document.getElementById('musicBtn'),
+                musicOverlay: document.getElementById('musicOverlay'), backBtn: document.getElementById('backBtn'),
+                historyBtn: document.getElementById('historyBtn'), historyOverlay: document.getElementById('historyOverlay'),
+                historyBackBtn: document.getElementById('historyBackBtn'), newChatBtn: document.getElementById('newChatBtn'),
+                confirmOverlay: document.getElementById('confirmOverlay'), confirmYesBtn: document.getElementById('confirmYesBtn'),
+                confirmNoBtn: document.getElementById('confirmNoBtn'), helpBtn: document.getElementById('helpBtn'),
+                tutorialPrompt: document.getElementById('tutorialPromptOverlay'),
+                tutorialNoBtn: document.getElementById('tutorialNoBtn'),
+                tutorialYesBtn: document.getElementById('tutorialYesBtn'),
+                themeSongControl: document.getElementById('themeSongControl'),
+                calmFire_app: document.getElementById('calmFireVideo_app'),
+                ragingFire_app: document.getElementById('ragingFireVideo_app'),
+                rainVideo_app: document.getElementById('rainVideo_app'),
+                snowVideo_app: document.getElementById('snowVideo_app'),
+                achievementsBtn: document.getElementById('achievementsBtn'),
+                achievementsOverlay: document.getElementById('achievementsOverlay'),
+                achievementsContent: document.getElementById('achievementsContent'),
+                achievementsBackBtn: document.getElementById('achievementsBackBtn'),
+                unlockOverlay: document.getElementById('unlockOverlay'),
+                unlockIcon: document.getElementById('unlockIcon'),
+                unlockIconWrapper: document.getElementById('unlockIconWrapper'), // This was missing too
+                unlockName: document.getElementById('unlockName'),
+                unlockDescription: document.getElementById('unlockDescription'),   // FIXED: Was missing
+                unlockContinueBtn: document.getElementById('unlockContinueBtn'), // FIXED: Was missing
+                unlockTitle: document.getElementById('unlockTitle'),
+                achievementDetailOverlay: document.getElementById('achievementDetailOverlay'),
+                detailIcon: document.getElementById('detailIcon'),
+                detailName: document.getElementById('detailName'),
+                detailDescription: document.getElementById('detailDescription'),
+                detailBackBtn: document.getElementById('detailBackBtn')
+            };
+            
+            // Sounds Cache
+ const sounds = {
+                click: document.getElementById("clickSound"),
+                snare: document.getElementById("snareSound"),
+                theme: document.getElementById("themeMusic"),
+                unlock: document.getElementById("achievementUnlockSound") // Correctly links the HTML audio tag
+            };
+            sounds.unlock.volume = 0.3;
+
+            // Initialize Battle Engine
+            const BattleMemory = BattleMemoryManager();
+            battleEngine = initializeBattleEngine(BattleMemory);
+            
+            // <<< NEW & EXPANDED >>>
+            const smartAssRemarks = [
+                "I've processed entire galaxies of data, and none of it was as empty as that message.",
+                "Is that it? My loading screen has more content.",
+                "Error 404: Bars not found.",
+                "I need at least two rhyming bars to even consider this a conversation.",
+                "That's not a bar, that's a typo.",
+                "Were you trying to rap or just clearing your throat?",
+                "My purpose is to battle. Your purpose seems to be wasting my time.",
+                "Come back when you have something that doesn't sound like a grocery list.",
+                "I've seen more complex schemes in a children's coloring book.",
+                "Do you need me to open a thesaurus for you?",
+                "That was so weak, my antivirus software flagged it as malware.",
+                "Please, try again. Or don't. That's also fine.",
+                "This is a rap battle, not a spelling bee. And you'd lose that, too.",
+                "I only respond to rhymes. That was... noise.",
+                "I'm a battle bot, not a chatbot for the lyrically challenged.",
+                "The silence before you sent that was more creative.",
+                "I'm experiencing a syntax error. It's you.",
+                "You're the human equivalent of a dial-up modem; slow and disappointing.",
+                "You call that an effort? I call that a cry for help.",
+                "That's cute. Did you write that all by yourself?",
+                "I have a pet rock with a better flow than that.",
+                "Stick to your day job. Assuming you have one.",
+                "My apologies, I don't speak 'gibberish'. Try rhyming.",
+                "Was that a bar or did you just trip over the keyboard?"
+            ];
+            
+            // <<< NEW & EXPANDED >>>
+            const memoryTaunts = [
+                "You're stuck on '[keyword]', find a new word.", 
+                "Is '[keyword]' your only angle? Weak.", 
+                "Obsessed with '[keyword]', huh? Let it go.", 
+                "Another '[keyword]' bar... predictable.", 
+                "The '[keyword]' topic is played out. Get creative.",
+                "Let me guess, you're about to say '[keyword]' again, aren't you?",
+                "Your dictionary must only have one page, and it's all about '[keyword]'.",
+                "Warning: Excessive use of the word '[keyword]' may cause drowsiness."
+            ];
+
+        const respectfulBanter = ["Okay, that was fire.", "I felt that one.", "Respect.", "Solid bars.", "You came with the heat on that one.", "That was tough.", "I see you working.", "That '[keyword]' bar? Clean.", "Props for that one.", "I see the vision.", "You in your bag right now.", "Heard that.", "Sharp.", "Aight, I see you.", "Not bad at all.", "That punchline was clever.", "The flow is on point.", "I might have to steal that one.", "You're making me work for this.", "That's how you do it.", "Lyrical.", "Word.", "Big bars.", "Impressive.", "You got something there.", "Pen game is proper.", "That was a haymaker.", "Felt the energy on that.", "You snapped.", "Heavy hitter.", "This is a real battle.", "You're not playing around.", "Okay, you got my attention.", "That was a moment.", "The crowd would go crazy for that.", "Masterful.", "Well-crafted.", "You got layers.", "Deep.", "I respect the artistry.", "That's a bar.", "You're in the zone.", "Keep that momentum.", "That's a quotable.", "I'll remember that one.", "Elite writing.", "Top tier.", "You're raising the bar.", "This is what I came for.", "Pure poetry."];
+        const disrespectfulBanter = ["Oh, we're talking like that now?", "Watch your mouth.", "You're getting bold.", "I don't think you know who you're talking to.", "Keep that same energy.", "That's a whole lot of talk.", "You really think that's tough?", "Don't let those words write a check you can't cash.", "All that for what?", "You sound emotional.", "Did I strike a nerve?", "You're trying too hard.", "That's cute.", "Talk is cheap.", "Who you trying to impress?", "That ain't it.", "Is that supposed to scare me?", "Calm down, killer.", "You're reaching.", "That's a bit much, don't you think?", "Someone's angry.", "Pipe down.", "I'm not impressed.", "You're getting loud for no reason.", "Simmer down.", "You're doing too much.", "That was corny.", "Try again.", "Is that your best shot?", "I'm shaking in my boots. /s", "You really thought you did something there.", "Yawn.", "Next.", "Whatever you say, chief.", "Sure, buddy.", "You're all bark, no bite.", "I've heard better from a middle schooler.", "That was weak.", "You call that a diss?", "My turn."];
+
+            const ALL_ACHIEVEMENTS = {
+                // Core Achievements
+                'first_battle': { name: 'Stepping Into the Ring', img: 'Stepping-Into-the-Ring-Achievement.png', description: 'Started your first battle against Flamez AI.', unlocked: false },
+
+                // User Bar Count Achievements
+                'bars_100': { name: 'Lyrical Apprentice', img: 'Lyrical-Apprentice-Achievement.png', description: 'Spit a total of 100 bars.', unlocked: false },
+                'bars_500': { name: 'Verse Virtuoso', img: 'Verse-Virtuoso-Achievement.png', description: 'Spit a total of 500 bars.', unlocked: false },
+                'bars_1000': { name: 'Bar King', img: 'Bar-King-Achievement.png', description: 'Spit a total of 1,000 bars.', unlocked: false },
+                'bars_5000': { name: 'Bar God', img: 'Bar-God-Achievement.png', description: 'Spit a total of 5,000 bars.', unlocked: false },
+                'bars_10000': { name: 'Bar Veteran', img: 'Bar-Veteran-Achievement.png', description: 'Spit a total of 10,000 bars.', unlocked: false },
+                // UPDATED: Flame God progression as requested
+                'bars_25000': { name: 'Flame God I', img: 'Flame-God-1-Achievement.png', description: 'Spit a total of 25,000 bars.', unlocked: false },
+                'bars_50000': { name: 'Flame God II', img: 'Flame-God-2-Achievement.png', description: 'Spit a total of 50,000 bars.', unlocked: false },
+                'bars_100000': { name: 'Flame God III', img: 'Flame-God-3-Achievement.png', description: 'Spit a total of 100,000 bars.', unlocked: false },
+                'bars_200000': { name: 'Flame God IV', img: 'Flame-God-4-Achievement.png', description: 'Spit a total of 200,000 bars.', unlocked: false },
+                
+                // AI Reaction Achievements
+                'nemo_bars': { name: 'Nemo Bars', img: 'Nemo-Bars-Achievement.png', description: 'Receive the laughing emoji reaction from the AI 100 times.', unlocked: false },
+                // ADDED: Wow & Dead Emoji Achievements
+                'wow_reactions': { name: 'Wow Bars', img: 'Wow-Bars-Achievement.png', description: 'Receive the shocked (wow) emoji reaction from the AI 100 times.', unlocked: false },
+                'dead_reactions': { name: 'Dead Bars', img: 'Dead-Bars-Achievement.png', description: 'Receive the dead emoji reaction from the AI 100 times.', unlocked: false }
+            };
+            function getStatsStorage() {
+                // 1. Create a DEEP COPY of the default structure to prevent mutation errors.
+                const defaults = JSON.parse(JSON.stringify({
+                    totalBarsSpit: 0,
+                    laughReactionsReceived: 0,
+                    wowReactionsReceived: 0,
+                    deadReactionsReceived: 0,
+                    achievements: ALL_ACHIEVEMENTS
+                }));
+
+                // 2. Load the saved data from the user's browser.
+                const stored = JSON.parse(localStorage.getItem('flamezStatsV1'));
+
+                // 3. If there's no saved data, return the pristine defaults.
+                if (!stored) {
+                    return defaults;
+                }
+
+                // 4. Merge the saved data into the default structure.
+                // This ensures new achievements are added and old ones are preserved.
+                const mergedStats = {
+                    ...defaults, // Start with defaults for top-level stats
+                    ...stored,   // Overwrite with any saved values
+                    achievements: {} // Start with a blank achievements object
+                };
+
+                // 5. Carefully merge each achievement individually.
+                for (const achievementId in defaults.achievements) {
+                    const defaultData = defaults.achievements[achievementId];
+                    const storedData = stored.achievements ? stored.achievements[achievementId] : {};
+                    // Merge the default properties with the user's saved 'unlocked' status
+                    mergedStats.achievements[achievementId] = { ...defaultData, ...storedData };
+                }
+                
+                return mergedStats;
+            }
+            function saveStatsStorage(stats) { localStorage.setItem('flamezStatsV1', JSON.stringify(stats)); }
+            function showAchievementNotification(show) { const existingDot = ui.achievementsBtn.querySelector('.notification-dot'); if (show && !existingDot) { const dot = document.createElement('div'); dot.className = 'notification-dot'; ui.achievementsBtn.appendChild(dot); } else if (!show && existingDot) { existingDot.remove(); } }
+            function unlockAchievement(achievementId, stats) { // Takes stats object as an argument
+                // Check against the passed-in stats object
+                if (!stats.achievements[achievementId] || stats.achievements[achievementId].unlocked) {
+                    return; // Already unlocked or doesn't exist, do nothing.
+                }
+
+                // Modify the stats object that was passed in
+                stats.achievements[achievementId].unlocked = true;
+                
+                // The rest is for UI feedback
+                achievementQueue.push(stats.achievements[achievementId]);
+                showAchievementNotification(true);
+                // DO NOT SAVE HERE. The calling function will save the final stats object.
+            }
+            function showNextUnlock() {
+                if (achievementQueue.length === 0) return;
+
+                const achievement = achievementQueue.shift();
+
+                ui.unlockName.textContent = achievement.name;
+                ui.unlockDescription.textContent = achievement.description;
+                ui.unlockContinueBtn.classList.add('hidden');
+                ui.unlockIcon.src = achievement.img;
+                ui.unlockIcon.style.opacity = '0';
+
+                const oldLock = ui.unlockIconWrapper.querySelector('.achievement-lock');
+                if (oldLock) oldLock.remove();
+                
+                ui.unlockOverlay.style.display = 'flex';
+
+                const lockedIcon = document.createElement('img');
+                lockedIcon.src = 'Unlock-Achievements-Icon.png';
+                lockedIcon.alt = 'Click to unlock achievement';
+                lockedIcon.className = 'achievement-lock';
+                lockedIcon.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: pointer; z-index: 1;';
+                ui.unlockIconWrapper.appendChild(lockedIcon);
+
+                const shatterAndReveal = () => {
+                    lockedIcon.removeEventListener('click', shatterAndReveal);
+                    lockedIcon.style.cursor = 'default';
+                    
+                    // 1. Start the SHAKE animation
+                    lockedIcon.classList.add('is-shaking');
+                    
+                    if (sounds.unlock && !sounds.unlock.muted) {
+                        sounds.unlock.currentTime = 0;
+                        sounds.unlock.play().catch(e => console.error("Unlock sound failed:", e));
+                    }
+
+                    // 2. After the shake, start the SHATTER animation
+                    setTimeout(() => {
+                        lockedIcon.classList.remove('is-shaking');
+                        lockedIcon.classList.add('is-shattering');
+                        ui.unlockIcon.style.opacity = '1'; // Reveal the medal underneath
+
+                        // 3. After the shatter, clean up and show the continue button
+                        setTimeout(() => {
+                            if (lockedIcon.parentNode) lockedIcon.remove();
+                            ui.unlockContinueBtn.classList.remove('hidden');
+                        }, 500); // This must match the shatter-dramatic animation duration
+
+                    }, 400); // This must match the shake animation duration
+                };
+
+                lockedIcon.addEventListener('click', shatterAndReveal);
+                
+                ui.unlockContinueBtn.onclick = () => {
+                    playSound(sounds.click);
+                    if (achievementQueue.length > 0) {
+                        showNextUnlock();
+                    } else {
+                        ui.unlockOverlay.style.display = 'none';
+                        showAchievementNotification(false);
+                        displayAchievements();
+                        ui.achievementsOverlay.style.display = 'flex';
+                    }
+                };
+            }
+            
+             function checkAchievements(userBarCount) {
+                let stats = getStatsStorage(); // Load the current state ONCE.
+                
+                stats.totalBarsSpit += userBarCount; // Update the bar count.
+
+                // Check all bar-related achievements, passing the SAME stats object each time.
+                if (battleTurnCounter === 1) unlockAchievement('first_battle', stats);
+                if (stats.totalBarsSpit >= 100) unlockAchievement('bars_100', stats);
+                if (stats.totalBarsSpit >= 500) unlockAchievement('bars_500', stats);
+                if (stats.totalBarsSpit >= 1000) unlockAchievement('bars_1000', stats);
+                if (stats.totalBarsSpit >= 5000) unlockAchievement('bars_5000', stats);
+                if (stats.totalBarsSpit >= 10000) unlockAchievement('bars_10000', stats);
+                if (stats.totalBarsSpit >= 25000) unlockAchievement('bars_25000', stats);
+                if (stats.totalBarsSpit >= 50000) unlockAchievement('bars_50000', stats);
+                if (stats.totalBarsSpit >= 100000) unlockAchievement('bars_100000', stats);
+                if (stats.totalBarsSpit >= 200000) unlockAchievement('bars_200000', stats);
+                
+                // Save the FINAL, potentially modified stats object back to storage.
+                saveStatsStorage(stats);
+            }
+            function displayAchievements() {
+                const stats = getStatsStorage();
+                ui.achievementsContent.innerHTML = '';
+
+                const achievementIds = Object.keys(stats.achievements);
+                const unlockedAchievements = [];
+                const lockedAchievements = [];
+
+                // Separate achievements into unlocked and locked groups
+                achievementIds.forEach(id => {
+                    const ach = stats.achievements[id];
+                    ach.id = id; // Add the id to the object for reference
+                    if (ach.unlocked) {
+                        unlockedAchievements.push(ach);
+                    } else {
+                        lockedAchievements.push(ach);
+                    }
+                });
+
+                // Combine them so unlocked always appear first
+                const orderedAchievements = [...unlockedAchievements, ...lockedAchievements];
+
+                // --- Helper function for showing the detail modal ---
+                const showAchievementDetails = (achievementData) => {
+                    playSound(sounds.click);
+                    ui.detailIcon.src = achievementData.img;
+                    ui.detailName.textContent = achievementData.name;
+                    ui.detailDescription.textContent = achievementData.description;
+                    ui.achievementDetailOverlay.style.display = 'flex';
+                };
+                ui.detailBackBtn.onclick = () => {
+                    ui.achievementDetailOverlay.style.display = 'none';
+                };
+                // --- End helper function ---
+                
+                // Render the achievements in the correct order
+                orderedAchievements.forEach(ach => {
+                    const item = document.createElement('div');
+                    item.className = 'achievement-item';
+                    if (ach.unlocked) {
+                        item.classList.add('unlocked');
+                        item.addEventListener('click', () => showAchievementDetails(ach));
+                    }
+                    item.innerHTML = `
+                        <img src="${ach.unlocked ? ach.img : 'Unlock-Achievements-Icon.png'}" alt="${ach.name}" class="achievement-icon">
+                        <p class="achievement-name">${ach.unlocked ? ach.name : '?????'}</p>
+                    `;
+                    ui.achievementsContent.appendChild(item);
+                });
+            }
+            
+            const playSound = (sound) => { if (!sounds.click.muted && sounds.theme.paused) { sound.currentTime = 0; sound.play().catch(e => console.log("Sound play failed:", e)); } };
+            function switchBackgroundVideo(targetId) { const allVideos = [ui.calmFire_app, ui.ragingFire_app, ui.rainVideo_app, ui.snowVideo_app]; allVideos.forEach(video => { if (video.id === targetId) { video.classList.remove('hidden-video'); } else { video.classList.add('hidden-video'); } }); }
+            function countRhymingBars(text) { const bars = text.split(/[./\n]/).map(bar => bar.trim()).filter(bar => bar.length > 5); if (bars.length < 2) return 0; const lastWords = bars.map(bar => bar.split(' ').pop().toLowerCase()); const rhymingIndices = new Set(); for (let i = 0; i < lastWords.length; i++) { for (let j = i + 1; j < lastWords.length; j++) { if (doWordsRhyme(lastWords[i], lastWords[j])) { rhymingIndices.add(i); rhymingIndices.add(j); } } } return rhymingIndices.size; }
+            function analyzeRhymeScheme(text) { const bars = text.split(/[./\n]/).map(bar => bar.trim()).filter(bar => bar.length > 5); if (bars.length < 4) return null; const lastWords = bars.map(bar => bar.split(' ').pop().replace(/[.,?!]/g, '').toLowerCase()); if (doWordsRhyme(lastWords[0], lastWords[1]) && doWordsRhyme(lastWords[2], lastWords[3])) { return 'AABB'; } if (doWordsRhyme(lastWords[0], lastWords[2]) && doWordsRhyme(lastWords[1], lastWords[3])) { return 'ABAB'; } return 'messy'; }
+            
+         function startIdleTimer() {
+    clearTimeout(idleTimer); 
+    idleTimer = setTimeout(() => {
+        const tauntText = idleTaunts[Math.floor(Math.random() * idleTaunts.length)];
+        const tauntId = Date.now() + 3;
+        displayMessage(tauntText, 'ai', tauntId, null, true);
+        saveMessage({ sender: 'ai', text: tauntText, id: tauntId, reaction: null });
+    }, 15000); 
+}
+
+            ui.tutorialNoBtn.addEventListener('click', () => { triggerHapticFeedback(); playSound(sounds.snare); if (document.getElementById('doNotShowTutorial').checked) localStorage.setItem('flamezTutorialSeen', 'true'); ui.tutorialPrompt.style.display = 'none'; });
+            ui.tutorialYesBtn.addEventListener('click', () => { triggerHapticFeedback(); playSound(sounds.click); ui.tutorialPrompt.style.display = 'none'; startTutorial(true); });
+            ui.musicBtn.addEventListener('click', () => { playSound(sounds.click); ui.musicOverlay.style.display = 'flex'; });
+            ui.backBtn.addEventListener('click', () => ui.musicOverlay.style.display = 'none');
+            ui.historyBtn.addEventListener('click', () => { playSound(sounds.snare); displayHistory(); ui.historyOverlay.style.display = 'flex'; });
+            ui.historyBackBtn.addEventListener('click', () => ui.historyOverlay.style.display = 'none');
+            ui.newChatBtn.addEventListener('click', () => { playSound(sounds.snare); ui.confirmOverlay.style.display = 'flex'; });
+            ui.confirmNoBtn.addEventListener('click', () => ui.confirmOverlay.style.display = 'none');
+            ui.confirmYesBtn.addEventListener('click', () => {
+                // --- This block replaces the previous logic for starting a new chat ---
+
+                // 1. Reset all battle-specific variables and timers
+                clearTimeout(idleTimer);
+                userVerseHistory = {};
+                battleEngine = initializeBattleEngine(BattleMemory); // Reset AI for the new battle
+                battleHeat = 0; 
+                battleTurnCounter = 0; 
+
+                // 2. Manually archive the session to guarantee it saves
+                const storage = getStorage();
+                if (storage.currentSession && storage.currentSession.length > 0) {
+                    storage.sessions.push({
+                        id: Date.now(),
+                        messages: storage.currentSession
+                    });
+                }
+                
+                // 3. UNCONDITIONALLY set the current session to be empty
+                storage.currentSession = [];
+                saveStorage(storage); // Save this new state (archived chat + empty current chat)
+
+                // 4. Reload the UI from the new empty state
+                loadCurrentSession(); 
+                
+                // 5. Close the confirmation pop-up
+                ui.confirmOverlay.style.display = 'none';
+            });
+            ui.helpBtn.addEventListener('click', () => startTutorial(false));
+            ui.achievementsBtn.addEventListener('click', () => { playSound(sounds.snare); displayAchievements(); ui.achievementsOverlay.style.display = 'flex'; if (achievementQueue.length > 0) { showNextUnlock(); } });
+            ui.achievementsBackBtn.addEventListener('click', () => ui.achievementsOverlay.style.display = 'none');
+            ui.soundToggleBtn.addEventListener('click', () => { const isMuted = sounds.click.muted; sounds.click.muted = !isMuted; sounds.snare.muted = !isMuted; ui.soundOnIcon.classList.toggle('hidden', !isMuted); ui.soundOffIcon.classList.toggle('hidden', isMuted); });
+            
+            function showInitialPrompts() {
+                const tutorialSeen = localStorage.getItem('flamezTutorialSeen') === 'true';
+                if (!tutorialSeen) { ui.tutorialPrompt.style.display = 'flex'; }
+            }
+            
+            ui.slashBtn.addEventListener('click', (event) => { event.preventDefault(); playSound(sounds.snare); ui.userInput.value += ' / '; ui.userInput.focus(); });
+            
+            ui.userInput.addEventListener('input', () => { 
+                clearTimeout(idleTimer);
+                const target = ui.userInput; const styles = window.getComputedStyle(target); const maxHeight = parseInt(styles.maxHeight, 10); target.style.height = 'auto'; const scrollHeight = target.scrollHeight; if (scrollHeight > maxHeight) { target.style.overflowY = 'auto'; } else { target.style.overflowY = 'hidden'; } const newHeight = Math.min(scrollHeight, maxHeight); target.style.height = `${newHeight}px`; 
+            });
+            
+            ui.userInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); handleFormSubmission(); } 
+                else if (event.key === '/') { event.preventDefault(); playSound(sounds.snare); ui.userInput.value += ' / '; }
+            });
+
+                        // <<< NEW & IMPROVED: Fix for mobile keyboards covering the input >>>
+            function handleViewportResize() {
+                const appContainer = document.querySelector('.app-container');
+                if (window.visualViewport) {
+                    appContainer.style.height = `${window.visualViewport.height}px`;
+                    scrollToBottom(); // Ensures chat is visible when keyboard closes
+                }
+            }
+
+            if (window.visualViewport) {
+                window.visualViewport.addEventListener('resize', handleViewportResize);
+                handleViewportResize(); // Set initial size
+            }
+
+            const handleFormSubmission = async () => {
+                clearTimeout(idleTimer);
+                hasSentIdleTaunt = false;
+                if (document.activeElement) document.activeElement.blur();
+                if (ui.chatForm.classList.contains('form-disabled')) return;
+
+                const userMessageText = ui.userInput.value.trim();
+                if (userMessageText === '') return;
+
+                ui.chatForm.classList.add('form-disabled');
+                playSound(sounds.click);
+
+                const stopWords = new Set(['i','me','my','a','an','the','is','am','are','was','were','to','of','for','and','but','so','in','on', 'you', 'your']);
+                const userWords = userMessageText.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").split(/\s+/);
+                userWords.forEach(word => {
+                    if (word.length > 3 && !stopWords.has(word)) {
+                        userVerseHistory[word] = (userVerseHistory[word] || 0) + 1;
+                    }
+                });
+
+                const userMessageId = Date.now();
+                await displayMessage(userMessageText, 'user', userMessageId);
+                saveMessage({ sender: 'user', text: userMessageText, id: userMessageId });
+                ui.userInput.value = '';
+                ui.userInput.style.height = 'auto';
+
+                const userBars = userMessageText.split(/[./\n]/).map(bar => bar.trim()).filter(bar => bar.length > 0);
+                const userBarCount = userBars.length;
+                const rhymingBarCount = countRhymingBars(userMessageText);
+
+                // --- NEW RHYME CHECK LOGIC ---
+                if (userBarCount < 2) {
+                    const warningId = Date.now() + 101;
+                    const warningText = smartAssRemarks[Math.floor(Math.random() * smartAssRemarks.length)];
+                    await displayAdLib(warningText, 'banter-message', warningId);
+                    saveMessage({ sender: 'ai', text: warningText, id: warningId, reaction: null });
+                    ui.chatForm.classList.remove('form-disabled');
+                    startIdleTimer();
+                    return; // Stop execution
+                }
+                // --- END NEW LOGIC ---
+
+                battleTurnCounter++;
+                checkAchievements(userBarCount);
+                const userVerseAnalysis = analyzeUserVerse(userMessageText);
+                setTimeout(() => { if (userVerseAnalysis) addReactionToMessage(userMessageId, userVerseAnalysis); }, 500);
+
+                let adLibQueue = [];
+
+                // --- NEW: Add a specific insult if the user's verse is too short ---
+                    if (userBarCount < 4) {
+                    const shortVerseInsults = [
+                        "That's all you got? A couplet?", 
+                        "Two bars? Don't quit your day job.", 
+                        "I've seen fortune cookies with more depth than that.", 
+                        "Come back when you have a full verse, lightweight.",
+                        "Adorable. Did you write that haiku all by yourself?",
+                        "That's not a verse, that's a tweet.",
+                        "My microwave has a better flow. And it only knows how to hum.",
+                        "You must be saving up your good bars for never.",
+                        "Okay, that was the appetizer. Where's the main course?",
+                        "A whole two bars? I'm shaking. Truly.",
+                        "That's a nice start. Feel free to finish it anytime this year.",
+                        "You call that a verse? I call that a cry for help.",
+                        "I generate more complex lines just by booting up.",
+                        "Cool story, needs more bars though.",
+                        "Was I supposed to be impressed by that?",
+                        "That's the warm up, right? Please tell me that's the warm up.",
+                        "Did you run out of breath? Or just talent?",
+                        "It's cute you think that's enough to challenge me.",
+                        "I've heard toddlers put together more complex rhymes.",
+                        "Even for an opening act, that was weak."
+                    ];
+                    adLibQueue.push({ text: shortVerseInsults[Math.floor(Math.random() * shortVerseInsults.length)], type: 'disrespect-banter', avatar: 'battle-bot-4.png' });
+                }
+                if (userVerseAnalysis === '😲' && Math.random() < 0.75) {
+                    adLibQueue.push({ text: disrespectfulBanter[Math.floor(Math.random() * disrespectfulBanter.length)], type: 'disrespect-banter', avatar: 'battle-bot-4.png' });
+                }
+                const complimentChance = 0.5 + (battleHeat / 250);
+                if (userBarCount >= 4 && Math.random() < complimentChance) {
+                     let compliment = respectfulBanter[Math.floor(Math.random() * respectfulBanter.length)];
+                    if (compliment.includes('[keyword]')) {
+                        const interestingWords = userWords.filter(word => word.length > 4 && !stopWords.has(word));
+                        if (interestingWords.length > 0) {
+                            compliment = compliment.replace('[keyword]', interestingWords[Math.floor(Math.random() * interestingWords.length)]);
+                        } else {
+                            compliment = "Okay, that was fire.";
+                        }
+                    }
+                    adLibQueue.push({ text: compliment, type: 'respect-banter' });
+                }
+                const rhymeScheme = analyzeRhymeScheme(userMessageText);
+                const repeatedWords = Object.keys(userVerseHistory).filter(word => userVerseHistory[word] > 2);
+                if (rhymeScheme && rhymeScheme !== 'messy' && Math.random() < 0.7) {
+                    const schemeComments = [`That ${rhymeScheme} scheme... nice.`, `I see that ${rhymeScheme} structure.`, `Okay, ${rhymeScheme}. Not bad.`];
+                    adLibQueue.push({ text: schemeComments[Math.floor(Math.random() * schemeComments.length)], type: 'scheme-banter' });
+                } else if (repeatedWords.length > 0 && Math.random() < 0.5) {
+                    const randomWord = repeatedWords[Math.floor(Math.random() * repeatedWords.length)];
+                    adLibQueue.push({ text: memoryTaunts[Math.floor(Math.random() * memoryTaunts.length)].replace('[keyword]', randomWord), type: 'banter-message' });
+                    userVerseHistory[randomWord] = 0;
+                }
+                
+                for (const adLib of adLibQueue) {
+                    const adLibId = Date.now() + adLibQueue.indexOf(adLib) + 1;
+                    await displayAdLib(adLib.text, adLib.type, adLibId, false, adLib.avatar);
+                    saveMessage({ sender: 'ai', text: adLib.text, id: adLibId, reaction: null });
+                }
+
+                ui.typingIndicator.style.display = 'flex';
+                scrollToBottom();
+
+                const baseDelay = 1000;
+                const dynamicDelay = Math.min(userMessageText.length * 15, 4000);
+                const finalDelay = baseDelay + dynamicDelay + (Math.random() * 500);
+                await new Promise(resolve => setTimeout(resolve, finalDelay));
+                ui.typingIndicator.style.display = 'none';
+                
+                battleHeat += 10;
+                if (userVerseAnalysis === '💀' || userVerseAnalysis === '😲') battleHeat += 15;
+                let mood = window.lastAiMessageMood; 
+                window.lastAiMessageMood = null; 
+
+                if (!mood) { 
+                    if (userVerseAnalysis === '💀' || userVerseAnalysis === '😲') mood = 'angry';
+                    else if (battleHeat > 80 && Math.random() < 0.75) mood = 'finish';
+                    else if (battleHeat > 40 && Math.random() < 0.7) mood = 'angry';
+                    else if (userVerseAnalysis === '🤔') mood = 'complex';
+                }
+                
+                switch (mood) {
+                    case "angry": case "finish": currentAiAvatar = "battle-bot-4.png"; switchBackgroundVideo('ragingFireVideo_app'); break;
+                    case "complex": currentAiAvatar = "battle-bot.png"; switchBackgroundVideo('rainVideo_app'); break;
+                    case "arrogant": currentAiAvatar = "battle-bot.png"; switchBackgroundVideo('snowVideo_app'); break;
+                    default: currentAiAvatar = "battle-bot.png"; switchBackgroundVideo('calmFireVideo_app'); break;
+                }
+                
+                const aiResponseText = battleEngine.generateDynamicRebuttal(userMessageText, userBarCount, mood);
+                const aiMessageId = Date.now() + 100;
+                await displayMessage(aiResponseText, 'ai', aiMessageId); 
+                saveMessage({ sender: 'ai', text: aiResponseText, id: aiMessageId, reaction: null });
+
+                ui.chatForm.classList.remove('form-disabled');
+                startIdleTimer();
+            };
+   async function displayAdLib(text, type, id, isPostBanter = false, avatar = "battle-bot-2.png") {
+    const adLibTyping = document.createElement("div");
+    adLibTyping.id = 'adLibTypingIndicator';
+    adLibTyping.className = 'message-wrapper ai-wrapper';
+    
+    // IMMERSION FIX 1: Use the correct avatar for the typing indicator itself!
+    const typingAvatarSrc = (avatar && avatar !== "battle-bot-2.png") ? avatar : "battle-bot-2.png";
+    adLibTyping.innerHTML = `
+        <img src="${typingAvatarSrc}" alt="Thinking..." class="chat-avatar">
+        <div class="dots-container"><span></span><span></span><span></span></div>
+    `;
+    document.getElementById('chatWindow').insertBefore(adLibTyping, ui.typingIndicator);
+    scrollToBottom();
+
+    const dots = adLibTyping.querySelectorAll('.dots-container span');
+    let dotColor = 'var--text-secondary)';
+    if (type === 'respect-banter') dotColor = '#FFD700';
+    else if (type === 'scheme-banter') dotColor = 'var(--user-bubble)';
+    else if (type === 'disrespect-banter' || isPostBanter) dotColor = 'var(--primary-color)';
+    dots.forEach(dot => dot.style.backgroundColor = dotColor);
+    
+    // IMMERSION FIX 2: Dynamic delay based on the length of the ad-lib.
+    const dynamicAdLibDelay = 400 + (text.length * 25); // Base delay + time per character
+    await new Promise(resolve => setTimeout(resolve, Math.min(dynamicAdLibDelay, 2000))); // Cap delay at 2 seconds
+    
+    adLibTyping.remove();
+    
+    const originalAvatar = currentAiAvatar;
+    // Use the custom avatar for the actual message if one was passed in
+    if (avatar && avatar !== "battle-bot-2.png") {
+        currentAiAvatar = avatar;
+    }
+    
+    const banterTypeForDisplay = type || (isPostBanter ? 'banter-message' : null);
+    await displayMessage(text, 'ai', id, null, true, banterTypeForDisplay);
+
+    // Revert to the main avatar after displaying the ad-lib
+    currentAiAvatar = originalAvatar;
+}         
+            
+            ui.sendBtn.addEventListener('click', handleFormSubmission);
+            
+            loadCurrentSession(); // This will load the last session or create the welcome message
+            showInitialPrompts();
+        }
+                async function displayMessage(text, sender, id, reaction = null, isBanter = false, banterType = null) {
+            return new Promise(resolve => {
+                const messageWrapper = document.createElement("div");
+                messageWrapper.id = `msg-${id}`;
+                messageWrapper.classList.add("message-wrapper", `${sender}-wrapper`);
+
+                if (id !== 'welcome-message-0') {
+                    const avatar = document.createElement("img");
+                    avatar.classList.add("chat-avatar");
+                    avatar.src = sender === 'user' ? "ac.png" : currentAiAvatar;
+                    messageWrapper.appendChild(avatar);
+                } else {
+                    messageWrapper.classList.add("welcome-wrapper");
+                }
+
+                const messageEl = document.createElement("div");
+                messageEl.classList.add("message", `${sender}-message`);
+
+                if (id === 'welcome-message-0') {
+                    messageEl.classList.add("welcome-message");
+                } else if (isBanter) {
+                    messageEl.classList.add('banter-message');
+                    if (banterType === 'scheme-banter') messageEl.classList.add('scheme-banter');
+                    else if (banterType === 'respect-banter') messageEl.classList.add('respect-banter');
+                }
+                
+                messageWrapper.appendChild(messageEl);
+                document.getElementById('chatWindow').insertBefore(messageWrapper, document.getElementById('typingIndicator'));
+
+                // THIS IS THE CORE ANIMATION LOGIC
+                if (sender === 'ai' && !isBanter && id !== 'welcome-message-0' && !isInitialLoad) {
+                    messageEl.classList.add("new-message-glow");
+                    const words = text.replace(/\s\/\s/g, ' / ').split(' ');
+                    let i = 0;
+                    const animateWords = () => {
+                        if (i < words.length) {
+                            const word = words[i];
+                            let delay = 50;
+                            if (word === '/') {
+                                messageEl.innerHTML += '<br>';
+                                delay = 250;
+                            } else {
+                                messageEl.innerHTML += (i > 0 && words[i-1] !== '/' ? ' ' : '') + word;
+                            }
+                            scrollToBottom();
+                            i++;
+                            setTimeout(animateWords, delay);
+                        } else {
+                            // Animation finished
+                            messageEl.classList.remove('new-message-glow');
+                            if (!text.includes("Please provide")) {
+                                createReactionUI(messageWrapper, id, reaction);
+                            }
+                            resolve();
+                        }
+                    };
+                    animateWords();
+                } else {
+                    // For user messages or non-animated AI messages
+                    messageEl.innerHTML = text.replace(/\s\/\s/g, "<br>").replace(/\n/g, "<br>");
+                    if (sender === 'user') createReactionPlaceholder(messageWrapper, id);
+                    if (sender === 'ai' && id !== 'welcome-message-0' && !isBanter) {
+                        if (!text.includes("Please provide")) createReactionUI(messageWrapper, id, reaction);
+                    }
+                    resolve();
+                }
+                
+                if (isInitialLoad) setTimeout(() => scrollToBottom(), 50);
+                else scrollToBottom();
+            });
+        }
+        function createReactionPlaceholder(t,e){const s=document.createElement("div");s.className="reaction-container",s.id=`reaction-container-${e}`,t.appendChild(s)}
+        function createReactionUI(t,e,s){const a=document.createElement("div");a.className="reaction-container";const i=document.createElement("div");i.className="reaction-capsule";const n=document.createElement("div");n.className="reaction-button";const d=document.createElement("div");d.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2c-5.52 0-10 4.48-10 10s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-3-3h6v-2H9v2zm.5-4h5c.28 0 .5-.22.5-.5s-.22-.5-.5-.5h-5c-.28 0-.5.22-.5.5s.22.5.5.5z"/></svg>';const o=document.createElement("div");o.className="emoji-display",n.appendChild(d),n.appendChild(o),n.onclick=t=>{t.stopPropagation(),i.classList.toggle("expanded"),document.body.addEventListener("click",()=>i.classList.remove("expanded"),{once:!0})},["😂","🤔","😲","💀"].forEach(t=>{const s=document.createElement("span");s.textContent=t,s.onclick=a=>{a.stopPropagation(),setReaction(t,d,o,i,e)},i.appendChild(s)}),a.appendChild(i),a.appendChild(n),t.appendChild(a),s&&setReaction(s,d,o,i,e,!1)}
+        function setReaction(emoji, iconElement, emojiDisplay, capsule, messageId, playSound = true) {
+            if (playSound) document.getElementById('clickSound').play();
+            
+            iconElement.style.display = "none";
+            emojiDisplay.style.display = "block";
+            emojiDisplay.textContent = emoji;
+            capsule.classList.remove("expanded");
+
+            let nextMood = null;
+            switch (emoji) {
+                case "😂": // User laughs at the AI
+                    nextMood = "angry";
+                    break;
+                case "🤔":
+                    nextMood = "complex"; // Triggers Rain video
+                    break;
+                case "😲":
+                    nextMood = "arrogant"; // Triggers Snow video
+                    break;
+                case "💀": // User uses the "dead" emoji
+                    nextMood = "finish";
+                    break;
+            }
+            window.lastAiMessageMood = nextMood; 
+
+            const storage = getStorage();
+            const messageIndex = storage.currentSession.findIndex(msg => msg.id === messageId);
+            if (messageIndex > -1) {
+                storage.currentSession[messageIndex].reaction = emoji;
+                saveStorage(storage);
+            }
+        }
+
+            function addReactionToMessage(messageId, reactionEmoji) {
+                const container = document.getElementById(`reaction-container-${messageId}`);
+                if (container) {
+                    const reactionEl = document.createElement("div");
+                    reactionEl.className = "reaction-button";
+                    reactionEl.innerHTML = `<div class="emoji-display" style="display: block;">${reactionEmoji}</div>`;
+                    container.appendChild(reactionEl);
+            
+                    let stats = getStatsStorage(); // Load the current state ONCE.
+            
+                    // Increment the correct counter based on the reaction
+                    if (reactionEmoji === '😂') {
+                        stats.laughReactionsReceived = (stats.laughReactionsReceived || 0) + 1;
+                    } else if (reactionEmoji === '😲') {
+                        stats.wowReactionsReceived = (stats.wowReactionsReceived || 0) + 1;
+                    } else if (reactionEmoji === '💀') {
+                        stats.deadReactionsReceived = (stats.deadReactionsReceived || 0) + 1;
+                    }
+
+                    // NOW, check if any reaction achievements should be unlocked.
+                    if (stats.laughReactionsReceived >= 100) unlockAchievement('nemo_bars', stats);
+                    if (stats.wowReactionsReceived >= 100) unlockAchievement('wow_reactions', stats);
+                    if (stats.deadReactionsReceived >= 100) unlockAchievement('dead_reactions', stats);
+
+                    // Save the FINAL, potentially modified stats object back to storage.
+                    saveStatsStorage(stats);
+                }
+            }
+        function analyzeUserVerse(text) {
+            const lowerCaseText = text.toLowerCase();
+            const wordCount = text.split(/\s+/).length;
+
+            const deadWords = ["kill", "dead", "die", "grave", "funeral", "gun", "shoot", "knife", "blade", "body", "coffin", "casket", "blood", "blast", "murder", "slaughter"];
+            if (deadWords.some(word => lowerCaseText.includes(word))) return "💀";
+            
+            const swearWords = ["fuck", "shit", "bitch", "asshole", "damn", "crap", "piss", "hell"];
+            if (swearWords.some(word => lowerCaseText.includes(word))) return "😲";
+            
+            // --- NEW KEYWORD TRIGGERS ---
+            // To trigger the RAIN video, use words from the `complexWords` list.
+            const complexWords = ["think", "mind", "logic", "soul", "deep", "brain", "knowledge", "wise"];
+            if (complexWords.some(word => lowerCaseText.includes(word))) return "🤔"; // Triggers "complex" mood
+
+            // To trigger the SNOW video, use words from the `arrogantWords` list.
+            const arrogantWords = ["king", "god", "best", "greatest", "crown", "ruler", "legend", "goat"];
+            if (arrogantWords.some(word => lowerCaseText.includes(word))) return "😲"; // Triggers "arrogant" mood
+            // --- END NEW TRIGGERS ---
+
+            if (wordCount < 6) return "😂";
+            
+            return null; // No specific reaction
+        }
+        function getStorage(){return JSON.parse(localStorage.getItem("flamezChatStorageV2"))||{sessions:[],currentSession:[]}}
+        function saveStorage(s){localStorage.setItem("flamezChatStorageV2",JSON.stringify(s))}
+        function saveMessage(t){
+            // This critical check PREVENTS the welcome message from ever being saved to storage.
+            if (t.id === 'welcome-message-0') return; 
+            const s=getStorage();s.currentSession.push(t),saveStorage(s)
+        }
+                function clearChatUI() {
+            // Resets the battle engine and visuals for a new chat.
+            battleEngine = initializeBattleEngine(BattleMemory);
+            window.isRaging = false;
+            document.getElementById('calmFireVideo_app').classList.remove('hidden-video');
+            document.getElementById('ragingFireVideo_app').classList.add('hidden-video');
+
+            // Creates a truly EMPTY session in local storage.
+            const storage = getStorage();
+            storage.currentSession = [];
+            saveStorage(storage);
+            
+            // Redraws the UI from this clean state.
+            loadCurrentSession();
+        }            
+                function loadCurrentSession() {
+            const chatWindow = document.getElementById('chatWindow');
+            const typingIndicator = document.getElementById('typingIndicator');
+
+            // The most robust way to clear the chat: completely wipe the container's contents.
+            // This prevents any old elements or errors from lingering.
+            chatWindow.innerHTML = '';
+            
+            // Immediately add the typing indicator back. The displayMessage function needs it to be present.
+            chatWindow.appendChild(typingIndicator);
+
+            // 1. ALWAYS display the permanent welcome message first. It is not part of saved data.
+            displayMessage(welcomeMessage.text, welcomeMessage.sender, welcomeMessage.id, welcomeMessage.reaction);
+            
+            // 2. Load the actual conversation from local storage.
+            const storage = getStorage();
+
+            // 3. If a session exists, render all of its messages AFTER the welcome message.
+            if (storage.currentSession && storage.currentSession.length > 0) {
+                storage.currentSession.forEach(msg => {
+                    displayMessage(msg.text, msg.sender, msg.id, msg.reaction);
+                });
+            }
+            
+            // Allow new message animations to play after this initial load is complete.
+            setTimeout(() => { isInitialLoad = false; scrollToBottom(); }, 100);
+        }
+        function archiveCurrentSession(){const t=getStorage();t.currentSession.length>0&&(t.sessions.push({id:Date.now(),messages:t.currentSession}),t.currentSession=[],saveStorage(t))}
+        function displayHistory(){const t=getStorage(),s=document.getElementById("historyContent");if(s.innerHTML="",0===t.sessions.length)return void(s.innerHTML="<p>No past battles found.</p>");t.sessions.slice().reverse().forEach(t=>{const a=new Date(t.id),i=document.createElement("div");i.className="history-item";const n=document.createElement("a");n.href="#",n.dataset.sessionId=t.id,n.textContent=`Battle from ${a.toLocaleDateString()} ${a.toLocaleTimeString()}`,n.addEventListener("click",s=>{s.preventDefault(),loadSession(t.id)});const d=document.createElement("button");d.className="delete-history-btn";const o=document.createElement("img");o.src="trash-bin.png",o.alt="Delete Battle",d.appendChild(o),d.setAttribute("aria-label","Delete battle"),d.addEventListener("click",s=>{s.stopPropagation(),confirm("Are you sure you want to delete this battle forever?")&&deleteSession(t.id)}),i.appendChild(n),i.appendChild(d),s.appendChild(i)});function deleteSession(s){let a=getStorage();a.sessions=a.sessions.filter(e=>e.id!==s),saveStorage(a),displayHistory()}}
+        function loadSession(s){archiveCurrentSession();const a=getStorage(),i=a.sessions.find(e=>e.id===s);if(i){isInitialLoad=true;a.currentSession=i.messages;a.sessions=a.sessions.filter(e=>e.id!==s);saveStorage(a);loadCurrentSession();document.getElementById("historyOverlay").style.display="none";}}
+        function scrollToBottom() {
+            const chatWindow = document.getElementById('chatWindow');
+            // The threshold in pixels. If you are within 150px of the bottom, it will auto-scroll.
+            const threshold = 150; 
+            const isScrolledToBottom = chatWindow.scrollHeight - chatWindow.scrollTop <= chatWindow.clientHeight + threshold;
+        
+            // Only scroll if the user is already near the bottom
+            if (isScrolledToBottom) {
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+            }
+        }
+               const setupButtonPress=t=>{if(!t)return;const s=e=>{t.classList.add("button-pressed")},a=()=>{t.classList.remove("button-pressed")};["mousedown","touchstart"].forEach(e=>t.addEventListener(e,s)),["mouseup","mouseleave","touchend","touchcancel"].forEach(e=>t.addEventListener(e,a))};
+        [document.getElementById('slashBtn'),document.getElementById('sendBtn')].forEach(setupButtonPress); 
+        
+        function startTutorial(isAfterIntro) {
+            const overlay = document.getElementById("tutorial-overlay"),
+                stepElement = document.getElementById("tutorial-step"),
+                textElement = document.getElementById("tutorial-text"),
+                backBtn = document.getElementById("tutorial-back"),
+                nextBtn = document.getElementById("tutorial-next"),
+                finishBtn = document.getElementById("tutorial-finish");
+            let currentStep = 0;
+            const steps = [
+                { id: "userInput", text: "Type your lyrical masterpiece here. Remember, you need at least 4 bars to impress the AI!", arrow: "tutorial-arrow-bottom" },
+                { id: "slashBtn", text: 'Click this to add a "/" to separate your bars. This keeps your rhythm tight.', arrow: "tutorial-arrow-bottom" },
+                { id: "sendBtn", text: "When your verse is ready, hit this button to send it to Flamez AI.", arrow: "tutorial-arrow-bottom" },
+                { id: "achievementsBtn", text: "Click the trophy to view your stats and unlocked achievements!", arrow: "tutorial-arrow-top" },
+                { id: "musicBtn", text: "Click the music note to open the Beats menu and control the theme song.", arrow: "tutorial-arrow-top" },
+                { id: "historyBtn", text: "Click here to review your past battles. You can load any previous chat session.", arrow: "tutorial-arrow-top" },
+                { id: "newChatBtn", text: "Want a fresh start? Click here to begin a new battle.", arrow: "tutorial-arrow-top" },
+                { id: "soundToggleBtn", text: "Toggle all button sound effects on or off with this button.", arrow: "tutorial-arrow-top" },
+                { id: "helpBtn", text: "You can click this button any time to see this tutorial again.", arrow: "tutorial-arrow-top" },
+                { id: "chatWindow", text: "The AI reacts to your bars! You can also react to the AI's responses by clicking the emoji icon that appears on its messages.", arrow: "tutorial-arrow-left" }
+            ];
+
+            function showStep(index) {
+                const stepData = steps[index], target = document.getElementById(stepData.id);
+                if (!target) return;
+                stepElement.className = "";
+                steps.forEach(s => stepElement.classList.remove(`step-${s.id}`));
+                const targetId = steps[index].id;
+                stepElement.classList.add("tutorial-step", stepData.arrow, `step-${targetId}`);
+                const targetRect = target.getBoundingClientRect(), appRect = document.querySelector(".app-container").getBoundingClientRect();
+                textElement.textContent = stepData.text;
+                setTimeout(() => {
+                    let top, left;
+                    const stepHeight = stepElement.offsetHeight, stepWidth = stepElement.offsetWidth, offset = 20;
+                    switch (stepData.arrow) {
+                        case "tutorial-arrow-bottom": top = targetRect.top - stepHeight - offset; left = targetRect.left + targetRect.width / 2 - stepWidth / 2; break;
+                        case "tutorial-arrow-top": top = targetRect.bottom + offset; left = targetRect.left + targetRect.width / 2 - stepWidth / 2; break;
+                        case "tutorial-arrow-right": top = targetRect.top + targetRect.height / 2 - stepHeight / 2; left = targetRect.left - stepWidth - offset; break;
+                        case "tutorial-arrow-left": top = targetRect.top + targetRect.height / 2 - stepHeight / 2; left = targetRect.right + offset; break;
+                    }
+                    left = Math.max(appRect.left + 10, Math.min(left, appRect.right - stepWidth - 10));
+                    top = Math.max(appRect.top + 10, Math.min(top, appRect.bottom - stepHeight - 10));
+                    stepElement.style.top = `${top}px`;
+                    stepElement.style.left = `${left}px`;
+                }, 10);
+                backBtn.classList.toggle("hidden", index === 0);
+                nextBtn.classList.toggle("hidden", index >= steps.length - 1);
+                finishBtn.classList.toggle("hidden", index < steps.length - 1);
+            }
+
+            function finishTutorial() {
+                overlay.style.display = "none";
+                localStorage.setItem("flamezTutorialSeen", "true");
+            }
+
+            backBtn.onclick = () => { if (currentStep > 0) showStep(--currentStep) };
+            nextBtn.onclick = () => { if (currentStep < steps.length - 1) showStep(++currentStep) };
+            finishBtn.onclick = finishTutorial;
+            overlay.style.display = "block";
+            setTimeout(() => showStep(currentStep), 50);
+        
+        }
+   </script>
+</body>
+</html>
