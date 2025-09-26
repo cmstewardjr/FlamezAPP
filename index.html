@@ -1437,24 +1437,32 @@ const ui = {
             const helpSettingsView = document.getElementById('help-settings-view');
             const helpAboutView = document.getElementById('help-about-view');
             
-            helpBackBtn.addEventListener('click', () => helpOverlay.style.display = 'none');
+            helpBackBtn.addEventListener('click', () => {
+                playSound(sounds.click);
+                helpOverlay.style.display = 'none'
+            });
             document.getElementById('settingsBackToMain').addEventListener('click', () => {
+                playSound(sounds.click);
                 helpSettingsView.classList.add('hidden');
                 helpMainView.classList.remove('hidden');
             });
             document.getElementById('aboutBackToMain').addEventListener('click', () => {
+                playSound(sounds.click);
                 helpAboutView.classList.add('hidden');
                 helpMainView.classList.remove('hidden');
             });
             document.getElementById('help-menu-tutorial').addEventListener('click', () => {
+                playSound(sounds.snare);
                 helpOverlay.style.display = 'none'; // Hide menu first
                 startTutorial(false);
             });
             document.getElementById('help-menu-settings').addEventListener('click', () => {
+                playSound(sounds.snare);
                 helpMainView.classList.add('hidden');
                 helpSettingsView.classList.remove('hidden');
             });
              document.getElementById('help-menu-about').addEventListener('click', () => {
+                playSound(sounds.snare);
                 helpMainView.classList.add('hidden');
                 helpAboutView.classList.remove('hidden');
             });
